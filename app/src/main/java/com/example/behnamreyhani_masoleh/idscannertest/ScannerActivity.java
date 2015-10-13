@@ -101,49 +101,35 @@ public class ScannerActivity extends Activity implements Camera.PictureCallback 
         if (pictureFile == null){
             return;
         }
-        /*try {
+        try {
             FileOutputStream fos = new FileOutputStream(pictureFile);
             fos.write(data);
             fos.close();
-            //TODO: HAVE TO DELETE ALL FILES IN THE FOLDER AT SOME ALARM TIME
-            //LATER ON BOUNCERS PHONE
         } catch (Exception e) {
-        }*/
-        // TODO: Might need to uncomment part where you save pics to drive
-
+        }
+        // TODO: Need to store Language files for tesseract onto app device
         if (pictureIsForOCR()) {
             // TODO: Pass in picture to OCR Library
         } else {
             // TODO: Pass in picture to barcode scanner
         }
+        // Delete temp file once OCR/scan is done
+        pictureFile.delete();
     }
 
     /** Create a File for saving an image or video */
-    private static File getOutputMediaFile(){
-        // To be safe, you should check that the SDCard is mounted
-        // using Environment.getExternalStorageState() before doing this.
-
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES), "NightOutIDs");
-        // This location works best if you want the created images to be shared
-        // between applications and persist after your app has been uninstalled.
-
-        // Create the storage directory if it does not exist
-        if (! mediaStorageDir.exists()){
-            if (! mediaStorageDir.mkdirs()){
-                return null;
-            }
-        }
-
-        // Create a media file name
+    private static File getOutputMediaFile() {
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        return new File(mediaStorageDir.getPath() + File.separator +
-                    "IMG_"+ timeStamp + ".jpg");
+        try {
+            return File.createTempFile("NIGHTOUT_IMG", timeStamp);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private void releaseCamera(){
         if (mCamera != null){
-            mCamera.release();        // release the camera for other applications
+            mCamera.release();
             mCamera = null;
         }
     }
