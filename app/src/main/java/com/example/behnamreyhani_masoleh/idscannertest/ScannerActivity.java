@@ -1,134 +1,157 @@
 package com.example.behnamreyhani_masoleh.idscannertest;
 
-import android.app.ActionBar;
-import android.hardware.Camera;
 import android.os.Bundle;
 import android.app.Activity;
-import android.os.Environment;
-import android.view.Gravity;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.FrameLayout;
+import android.util.Log;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.CompoundButton;
 import android.widget.ToggleButton;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import com.example.behnamreyhani_masoleh.idscannertest.camera.CameraManager;
 
-public class ScannerActivity extends Activity implements Camera.PictureCallback {
+import java.io.IOException;
 
-    private static final int BACK_FRAME_WIDTH = 448*3;
-    private static final int BACK_FRAME_HEIGHT = 100*3;
-    private static final int FRONT_FRAME_WIDTH = 350*3;
-    private static final int FRONT_FRAME_HEGIHT = 220*3;
+public class ScannerActivity extends Activity implements SurfaceHolder.Callback {
 
-    private FrameLayout.LayoutParams backOfCardParams =
-            new FrameLayout.LayoutParams(BACK_FRAME_WIDTH, BACK_FRAME_HEIGHT, Gravity.CENTER);
-
-    private FrameLayout.LayoutParams frontOfCardParams =
-            new FrameLayout.LayoutParams(FRONT_FRAME_WIDTH, FRONT_FRAME_HEGIHT, Gravity.CENTER);
-
-    private Camera mCamera;
-    private ScannerView mPreview;
     private ToggleButton mCardSideButton;
-    private View mCardFrame;
-
+    private ToggleButton mLightButton;
+    private ViewFinderView mViewFinder;
+    private CameraManager mCameraManager;
+    private boolean mHasSurface;
+    private TessUtils mTessUtils;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+
+        mCameraManager = new CameraManager(this);
+        mTessUtils = new TessUtils(this);
+
         setContentView(R.layout.activity_scanner);
+        mViewFinder = (ViewFinderView) findViewById(R.id.view_finder_view);
+        mViewFinder.setCameraManager(mCameraManager);
 
         mCardSideButton = (ToggleButton) findViewById(R.id.toggleSide);
-        mCardFrame = findViewById(R.id.frame);
-        mCardSideButton.setOnClickListener(new View.OnClickListener() {
+        mCardSideButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onClick(View v) {
-                if (mCardSideButton.isChecked()) {
-                    mCardFrame.setLayoutParams(frontOfCardParams);
-                } else {
-                    mCardFrame.setLayoutParams(backOfCardParams);
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                try {
+                    mCameraManager.adjustFramingRect(isChecked);
+                    mViewFinder.invalidate();
+                } catch (Exception e){
+                    Log.e("Ben", "exception", e);
                 }
             }
+        });
+
+        mLightButton = (ToggleButton)findViewById(R.id.toggleFlash);
+        mLightButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        try {
+                            mCameraManager.setLightMode(isChecked);
+                        } catch (Exception e){
+                            Log.e("Ben", "exception", e);
+                        }
+                    }
         });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // Create an instance of Camera
-        mCamera = getCameraInstance();
-        // Create our Preview view and set it as the content of our activity.
-        mPreview = new ScannerView(this, mCamera);
-        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
-        preview.addView(mPreview);
 
-        Button captureButton = (Button) findViewById(R.id.button_capture);
-        captureButton.setOnClickListener(
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        // get an image from the camera
-                        mCamera.takePicture(null, null, ScannerActivity.this);
-                    }
-                }
-        );
+        SurfaceHolder holder = ((SurfaceView)findViewById(R.id.surface_view)).getHolder();
+        if (mHasSurface) {
+            try {
+                startCamera(holder, mLightButton.isChecked());
+                mCameraManager.adjustFramingRect(mCardSideButton.isChecked());
+            } catch (Exception e) {
+                Log.e("Ben", "exception", e);
+            }
+        } else {
+            holder.addCallback(this);
+        }
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
 
     @Override
     protected void onPause() {
+        mCameraManager.deInitCamera();
+        if (!mHasSurface) {
+            SurfaceHolder surfaceHolder = ((SurfaceView) findViewById(R.id.surface_view))
+                    .getHolder();
+            surfaceHolder.removeCallback(this);
+        }
         super.onPause();
-        mCamera.setPreviewCallback(null);
-        mPreview.getHolder().removeCallback(mPreview);
-        releaseCamera();              // release the camera immediately on pause event
+
     }
 
-    public static Camera getCameraInstance(){
+    @Override
+    public void surfaceCreated(SurfaceHolder holder) {
+        if (!mHasSurface) {
+            try {
+                startCamera(holder, mLightButton.isChecked());
+                mCameraManager.adjustFramingRect(mCardSideButton.isChecked());
+                mViewFinder.invalidate();
+            } catch (Exception e) {
+                Log.e("Ben", "exception", e);
+            }
+        }
+        mHasSurface = true;
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+        mHasSurface = false;
+    }
+
+    private void startCamera(SurfaceHolder holder, boolean turnLightOn){
+        try {
+            mCameraManager.initCamera(holder, turnLightOn);
+        } catch (IOException e) {
+            Log.e("Ben", "exception", e);
+        }
+    }
+
+/*
+    public static Camera getCameraInstance() {
         Camera c = null;
         try {
             c = Camera.open();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        catch (Exception e){
-        }
-        return c; // returns null if camera is unavailable
+        return c;
     }
 
     @Override
     public void onPictureTaken(byte[] data, Camera camera) {
-        File pictureFile = getOutputMediaFile();
-        if (pictureFile == null){
-            return;
-        }
-        try {
-            FileOutputStream fos = new FileOutputStream(pictureFile);
-            fos.write(data);
-            fos.close();
-        } catch (Exception e) {
-        }
-        // TODO: Need to store Language files for tesseract onto app device
         if (pictureIsForOCR()) {
-            // TODO: Pass in picture to OCR Library
+          mImageHelper.test(data,mCardFrame);
+           //String text = mTessHelper.applyOCR(mImageHelper.convertRawDataToBWBitmap(data));
+           //Log.d("Ben", text);
         } else {
             // TODO: Pass in picture to barcode scanner
         }
-        // Delete temp file once OCR/scan is done
-        pictureFile.delete();
     }
 
-    /** Create a File for saving an image or video */
-    private static File getOutputMediaFile() {
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        try {
-            return File.createTempFile("NIGHTOUT_IMG", timeStamp);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private void releaseCamera(){
-        if (mCamera != null){
+    private void releaseCamera() {
+        if (mCamera != null) {
             mCamera.release();
             mCamera = null;
         }
@@ -137,4 +160,10 @@ public class ScannerActivity extends Activity implements Camera.PictureCallback 
     private boolean pictureIsForOCR() {
         return mCardSideButton.isChecked();
     }
+
+      private void testOCRAlgo(){
+        File testImage = new File(Environment.getExternalStorageDirectory(), "nightout/benji.png");
+        String text = mTessHelper.testOCR(testImage);
+        new AlertDialog.Builder(this).setTitle("Test").setMessage(text).create().show();
+    }*/
 }
