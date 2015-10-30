@@ -68,6 +68,7 @@ public class CameraManager {
 
         mFramingRect = new Rect(leftOffset, topOffset,
                 leftOffset + newWidth, topOffset + newHeight);
+        mCameraConfig.setFocusArea(mCamera, mFramingRect);
     }
 
     public synchronized Rect getFramingRect() {

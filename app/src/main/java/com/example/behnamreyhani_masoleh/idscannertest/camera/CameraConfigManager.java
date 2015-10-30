@@ -46,6 +46,16 @@ public class CameraConfigManager {
         mCameraRes = findBestPreviewSizeValue(params);
     }
 
+    void setFocusArea(Camera camera, Rect focusAreaRect) {
+        Camera.Parameters params = camera.getParameters();
+        if (params.getMaxNumFocusAreas() == 0) {
+            return;
+        }
+        List<Camera.Area> convertedCameraFocusArea = convertToCameraFocusArea(focusAreaRect);
+        params.setFocusAreas(convertedCameraFocusArea);
+        camera.setParameters(params);
+    }
+
     void setCameraDefaultParams(Camera camera) {
         if (camera == null) {
             return;
@@ -97,6 +107,7 @@ public class CameraConfigManager {
             params.setFlashMode(torch);
             camera.setParameters(params);
         }
+
     }
 
     private Point findBestPreviewSizeValue(Camera.Parameters parameters) {
@@ -170,6 +181,17 @@ public class CameraConfigManager {
             }
         }
         return result;
+    }
+
+    private List<Camera.Area> convertToCameraFocusArea(Rect focusArea) {
+        List<Camera.Area>list = new ArrayList<>();
+        Camera.Area area = new Camera.Area(new Rect(
+                ((focusArea.left) * (2000/mScreenRes.x)) - 1000,
+                ((focusArea.top) * (2000/mScreenRes.y)) - 1000,
+                ((focusArea.right) * (2000/mScreenRes.x)) - 1000,
+                ((focusArea.bottom) * (2000/mScreenRes.y)) - 1000),1000);
+        list.add(area);
+        return list;
     }
 
     public Point getScreenRes() {
