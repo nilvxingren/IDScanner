@@ -1,17 +1,8 @@
-package com.example.behnamreyhani_masoleh.idscannertest;
+package com.nightout.idscanner;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.os.Environment;
-import android.view.View;
 
 import com.googlecode.tesseract.android.TessBaseAPI;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 /**
  * Created by behnamreyhani-masoleh on 15-10-18.
@@ -24,7 +15,7 @@ public class TessUtils {
     private static final String TESS_LANGUAGE_FILE = "eng.traineddata";
     private static final String TESS_DATA_SUBDIRECTORY = "tessdata";
 
-    public TessUtils (Context context) {
+    public TessUtils(Context context) {
         mContext = context;
         mTessAPI = new TessBaseAPI();
         configureAPIForOCR();

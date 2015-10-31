@@ -1,4 +1,4 @@
-package com.example.behnamreyhani_masoleh.idscannertest;
+package com.nightout.idscanner;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -9,7 +9,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 
-import com.example.behnamreyhani_masoleh.idscannertest.camera.CameraManager;
+import com.nightout.idscanner.camera.CameraManager;
 
 /**
  * Created by behnamreyhani-masoleh on 15-10-23.

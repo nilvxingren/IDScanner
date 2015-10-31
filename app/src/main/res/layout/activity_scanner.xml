@@ -9,7 +9,7 @@
         android:layout_height="match_parent"
         android:layout_centerInParent="true"/>
 
-    <com.example.behnamreyhani_masoleh.idscannertest.ViewFinderView
+    <com.nightout.idscanner.ViewFinderView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/view_finder_view"

@@ -1,4 +1,4 @@
-package com.example.behnamreyhani_masoleh.idscannertest;
+package com.nightout.idscanner;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

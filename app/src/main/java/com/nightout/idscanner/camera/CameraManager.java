@@ -1,4 +1,4 @@
-package com.example.behnamreyhani_masoleh.idscannertest.camera;
+package com.nightout.idscanner.camera;
 
 import android.content.Context;
 import android.graphics.Point;

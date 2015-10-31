@@ -1,12 +1,9 @@
-package com.example.behnamreyhani_masoleh.idscannertest;
+package com.nightout.idscanner;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.BitmapRegionDecoder;
 import android.graphics.Rect;
-import android.media.ThumbnailUtils;
 import android.os.Environment;
 import android.util.DisplayMetrics;
 import android.view.View;
@@ -103,8 +100,4 @@ public class ImageUtils {
         }
         return value;
     }
-
-
-
-
 }

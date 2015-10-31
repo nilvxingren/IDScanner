@@ -1,9 +1,9 @@
-package com.example.behnamreyhani_masoleh.idscannertest;
+package com.nightout.idscanner;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.os.Bundle;
-import android.app.Activity;
 import android.os.Environment;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -12,7 +12,7 @@ import android.view.WindowManager;
 import android.widget.CompoundButton;
 import android.widget.ToggleButton;
 
-import com.example.behnamreyhani_masoleh.idscannertest.camera.CameraManager;
+import com.nightout.idscanner.camera.CameraManager;
 import com.googlecode.tesseract.android.TessBaseAPI;
 
 import java.io.BufferedOutputStream;
