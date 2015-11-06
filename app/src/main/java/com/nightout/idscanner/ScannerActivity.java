@@ -3,11 +3,14 @@ package com.nightout.idscanner;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
+import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.CompoundButton;
 import android.widget.ToggleButton;
@@ -15,10 +18,11 @@ import android.widget.ToggleButton;
 import com.nightout.idscanner.camera.CameraManager;
 import com.googlecode.tesseract.android.TessBaseAPI;
 
+import org.opencv.android.OpenCVLoader;
+
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -31,14 +35,21 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
     private boolean mHasSurface;
     private TessBaseAPI mTessAPI;
 
+    static {
+        if (!OpenCVLoader.initDebug()) {
+            Log.d("Ben","Unable to use opencv");
+        } else {
+            Log.d("Ben","opencv started");
+        }
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         if (!isTessEnglishFileOnDevice()) {
-            final ProgressDialog progressDialog = ProgressDialog.show(this, "Please wait ...", "Downloading Image ...", true);
-            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            progressDialog.setCancelable(false);
+
+            final ProgressDialog progressDialog = showProgressDialog("Downloading Image ...");
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -60,7 +71,13 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        mCameraManager = new CameraManager(this);
+        mCameraManager = new CameraManager(this, new Camera.PictureCallback(){
+
+            @Override
+            public void onPictureTaken(byte[] data, Camera camera) {
+                new OCRDecodeAsyncTask(ScannerActivity.this, data, mCameraManager, mTessAPI).execute();
+            }
+        });
 
         setContentView(R.layout.activity_scanner);
         mViewFinder = (ViewFinderView) findViewById(R.id.view_finder_view);
@@ -82,14 +99,27 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
 
         mLightButton = (ToggleButton)findViewById(R.id.toggleFlash);
         mLightButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        try {
-                            mCameraManager.setLightMode(isChecked);
-                        } catch (Exception e){
-                            Log.e("Ben", "exception", e);
-                        }
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                try {
+                    mCameraManager.setLightMode(isChecked);
+                } catch (Exception e) {
+                    Log.e("Ben", "exception", e);
+                }
+            }
+        });
+
+        (findViewById(R.id.button_capture)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mHasSurface) {
+                    try {
+                        mCameraManager.takePicture();
+                    } catch (Exception e) {
+                        showErrorMessage("Camera Hardware Error", "There was a problem with the camera hardware.");
                     }
+            }
+            }
         });
     }
 
@@ -159,8 +189,9 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
     private void startCamera(SurfaceHolder holder, boolean turnLightOn){
         try {
             mCameraManager.initCamera(holder, turnLightOn);
-        } catch (IOException e) {
+        } catch (Exception e) {
             Log.e("Ben", "exception", e);
+            showErrorMessage("Camera Hardware Error", "There was a problem with the camera hardware. Please re-start you're phone.");
         }
     }
 
@@ -211,7 +242,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
         if (!mTessAPI.init(getStorageDirectory().toString(), "eng")) {
             return false;
         }
-        mTessAPI.setPageSegMode(TessBaseAPI.PageSegMode.PSM_SPARSE_TEXT_OSD);
+        mTessAPI.setPageSegMode(TessBaseAPI.PageSegMode.PSM_AUTO);
         mTessAPI.setVariable(TessBaseAPI.VAR_CHAR_BLACKLIST, "`~!@#$%^&*_+=|\\}]{['\";:?>.<,");
         mTessAPI.setVariable(TessBaseAPI.VAR_CHAR_WHITELIST,
                 "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-/()");
@@ -262,5 +293,25 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
             return false;
         }
         return true;
+    }
+
+    public ProgressDialog showProgressDialog(String msg) {
+        final ProgressDialog progressDialog = ProgressDialog.show(this, "Please wait ...", msg, true);
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressDialog.setCancelable(false);
+        return progressDialog;
+    }
+
+    //only for testing purposes
+    public void showResultAlertDialog(String decodedString) {
+        new AlertDialog.Builder(this)
+                .setTitle("Decoded Data:")
+                .setMessage(decodedString)
+                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        mCameraManager.restartCamera();
+                    }
+                }).create().show();
     }
 }

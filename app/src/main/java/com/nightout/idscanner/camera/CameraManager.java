@@ -1,10 +1,13 @@
 package com.nightout.idscanner.camera;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.hardware.Camera;
 import android.view.SurfaceHolder;
+
+import com.nightout.idscanner.ImageUtils;
 
 import java.io.IOException;
 
@@ -14,18 +17,22 @@ import java.io.IOException;
 public class CameraManager {
     public static final int BC_FRAME_WIDTH = 448 * 3;
     public static final int BC_FRAME_HEIGHT = 100 * 3;
-    public static final int OCR_FRAME_WIDTH = 350 * 3;
-    public static final int OCR_FRAME_HEIGHT = 220 * 3;
+    public static final int OCR_FRAME_WIDTH = 325 * 3;
+    public static final int OCR_FRAME_HEIGHT = 200 * 3;
 
     private Context mContext;
     private CameraConfigManager mCameraConfig;
     private Camera mCamera;
+    private Camera.PictureCallback mCallback;
     private boolean mCameraIsInitialized;
     private Rect mFramingRect;
+    private ImageUtils mImageUtils;
 
-    public CameraManager(Context context) {
+    public CameraManager(Context context, Camera.PictureCallback callback) {
         mContext = context;
         mCameraConfig = new CameraConfigManager(mContext);
+        mCallback = callback;
+        mImageUtils = new ImageUtils(mContext);
     }
 
     public synchronized void initCamera(SurfaceHolder holder, boolean turnLightOn) throws IOException {
@@ -73,6 +80,36 @@ public class CameraManager {
 
     public synchronized Rect getFramingRect() {
         return mFramingRect;
+    }
+
+    public synchronized Rect getFramingRectInPreview() {
+        Rect rect = new Rect(getFramingRect());
+        Point cameraResolution = mCameraConfig.getCameraRes();
+        Point screenResolution = mCameraConfig.getScreenRes();
+        if (cameraResolution == null || screenResolution == null) {
+            return null;
+        }
+        rect.left = rect.left * cameraResolution.x / screenResolution.x;
+        rect.right = rect.right * cameraResolution.x / screenResolution.x;
+        rect.top = rect.top * cameraResolution.y / screenResolution.y;
+        rect.bottom = rect.bottom * cameraResolution.y / screenResolution.y;
+        return rect;
+    }
+
+    public void takePicture() {
+        if (mCamera != null) {
+            mCamera.takePicture(null, null, mCallback);
+        }
+    }
+
+    public void restartCamera(){
+        if (mCamera != null) {
+            mCamera.startPreview();
+        }
+    }
+
+    public Bitmap getCroppedBitmap(byte [] data) {
+        return mImageUtils.cropAndSaveBitmapTest(data, mFramingRect, mCameraConfig.getScreenRes());
     }
 
 }
