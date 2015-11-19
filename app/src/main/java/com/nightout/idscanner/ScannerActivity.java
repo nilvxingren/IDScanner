@@ -169,7 +169,6 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
                 startCamera(holder, mLightButton.isChecked());
                 mCameraManager.adjustFramingRect(mCardSideButton.isChecked());
                 mViewFinder.invalidate();
-                //mTessAPI.setRectangle();
             } catch (Exception e) {
                 Log.e("Ben", "exception", e);
             }
@@ -314,4 +313,5 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
                     }
                 }).create().show();
     }
+
 }

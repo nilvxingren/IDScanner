@@ -5,8 +5,8 @@ import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.googlecode.leptonica.android.ReadFile;
 import com.googlecode.tesseract.android.TessBaseAPI;
+
 import com.nightout.idscanner.camera.CameraManager;
 
 /**
@@ -35,16 +35,21 @@ public class OCRDecodeAsyncTask extends AsyncTask<Void, Void, String> {
     protected String doInBackground(Void... values) {
         long start = System.currentTimeMillis();
         String results;
-        Bitmap bitmap = mManager.getCroppedBitmap(mData);
+        Bitmap bitmap = mManager.getEnhancedBitmap(mData);
+        // Testing algo:
+        //Bitmap bitmap = mManager.testAlgo();
+        Log.d("Benji", "Pipeline time in ms: " + (System.currentTimeMillis() - start));
         if (bitmap == null) {
             return null;
         }
-        long tessStart = System.currentTimeMillis();
         mTessAPI.setImage(bitmap);
         results = mTessAPI.getUTF8Text();
-        Log.d("Benji","Time for tess shit in ms: " + (System.currentTimeMillis()-tessStart));
-        long totalTime = System.currentTimeMillis() - start;
-        return results + "\nTime Required in ms: " + totalTime;
+
+        long tessStart = System.currentTimeMillis();
+
+        Log.d("Benji", "Time taken for Tess in ms: " + (System.currentTimeMillis() - tessStart));
+        Log.d("Benji", "Results with rescale:\n" + results);
+        return "\nTime Required in ms with rescale: " + (System.currentTimeMillis() - start);
     }
 
     protected void onPostExecute(String decodedString) {

@@ -9,6 +9,8 @@ import android.view.SurfaceHolder;
 
 import com.nightout.idscanner.ImageUtils;
 
+import org.opencv.core.Mat;
+
 import java.io.IOException;
 
 /**
@@ -108,8 +110,7 @@ public class CameraManager {
         }
     }
 
-    public Bitmap getCroppedBitmap(byte [] data) {
-        return mImageUtils.cropAndSaveBitmapTest(data, mFramingRect, mCameraConfig.getScreenRes());
+    public Bitmap getEnhancedBitmap(byte [] data) {
+        return mImageUtils.bitmapEnhancementPipeline(data, mFramingRect, mCameraConfig.getScreenRes());
     }
-
 }
