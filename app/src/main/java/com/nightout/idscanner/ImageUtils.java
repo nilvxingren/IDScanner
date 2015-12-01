@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapRegionDecoder;
-import android.graphics.Color;
 import android.graphics.Rect;
 import android.os.Environment;
 import android.util.Log;
@@ -14,11 +13,9 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
-import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.photo.Photo;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -35,6 +32,8 @@ public class ImageUtils {
 
     private static final double WIDTH_BUFFER = 0.05;
     private static final double IMAGE_SCALE_FACTOR = 0.50;
+    private static final double WHITE_PIXEL_THRESHOLD = 0.10;
+    private static final double WHITE_PIXEL_THRESHOLD_TWO = 0.15;
 
     private Context mContext;
 
@@ -46,22 +45,40 @@ public class ImageUtils {
     public Bitmap bitmapEnhancementPipeline(byte [] data, Rect frame, android.graphics.Point screenRes) {
         Bitmap bm = null;
         try {
+            long start = System.currentTimeMillis();
             bm = getTestImage();
             //bm = getCroppedBitmapFromData(data, frame, screenRes);
-
+            long test = System.currentTimeMillis();
             Mat greyscaledMat = convertMatToGrayScale(bm);
-
+            Log.d("Faggot","Time for greyscale in ms: " + (System.currentTimeMillis() - test));
             // Use this image for OCR once text boxes are found
-            Mat bw = convertToBinaryAdaptiveThreshold(greyscaledMat, 49, 30, false);
-            Mat textBoxes = getTextBoxes(bw);
+            //Mat bw = convertToBinaryAdaptiveThreshold(greyscaledMat, 49, 30, false);
+
+            Mat bw = new Mat();
+            test = System.currentTimeMillis();
+            bw  = convertToBinaryAdaptiveThreshold(greyscaledMat, 39, 30, false);
+            Log.d("Faggot","Time for bw in ms: " + (System.currentTimeMillis() - test));
+            test = System.currentTimeMillis();
+            Mat blurred = filterImage(bw);
+            Log.d("Faggot","Time for bw in ms: " + (System.currentTimeMillis() - test));
+            //drawBoxes(findTextBoxes(blurred, bw), greyscaledMat, "Kir30");
+            findTextBoxes(blurred, bw);
+            //FOR TESTING TextBox recognition with different params
+            /*for (int i = 15; i<61;i+=2) {
+                bw  = convertToBinaryAdaptiveThreshold(greyscaledMat, i,30, false );
+                Mat blurred = filterImage(bw);
+                drawBoxes(findTextBoxes(blurred), greyscaledMat,"BoxPic-"+i+"-"+30);
+            }*/
+
 
             bw = rescaleMat(bw, IMAGE_SCALE_FACTOR);
 
             Core.bitwise_not(bw, bw);
 
-            saveIntermediateInPipelineToFile(bw, "finalBW");
+          //  saveIntermediateInPipelineToFile(bw, "finalBW");
             Bitmap outBM = Bitmap.createBitmap(bw.cols(), bw.rows(), Bitmap.Config.ARGB_8888);
             Utils.matToBitmap(bw, outBM);
+            Log.d("Faggot","Time in ms: " + (System.currentTimeMillis() - start));
             //getCroppedTextBoxes(greyscaledMat);
         } catch (Exception e) {
             e.printStackTrace();
@@ -69,67 +86,80 @@ public class ImageUtils {
         return bm;
     }
 
-    private Mat filterImage(Mat mat) {
-        Mat filtered = new Mat();
-
-        Size size = new Size(2,3);
-        Mat rectKernel = Imgproc.getStructuringElement(Imgproc.CV_SHAPE_RECT, size);
-
-        Imgproc.morphologyEx(mat, filtered, Imgproc.MORPH_OPEN, rectKernel);
-        return filtered;
-    }
-
-    private Mat filterGreyscale(Mat grey) {
-        for (int i = 3; i<= 9; i+=3) {
-            Mat filteredEllipse = new Mat();
-            Mat filteredRect = new Mat();
-            Mat filteredCross = new Mat();
-
-            Mat kernelElipse = Imgproc.getStructuringElement(Imgproc.CV_SHAPE_ELLIPSE, new Size(i, i));
-            Mat kernelRect = Imgproc.getStructuringElement(Imgproc.CV_SHAPE_RECT, new Size(i, i));
-            Mat kernelCross = Imgproc.getStructuringElement(Imgproc.CV_SHAPE_CROSS, new Size(i, i));
-
-            Imgproc.morphologyEx(grey, filteredEllipse, Imgproc.MORPH_CLOSE, kernelElipse);
-            Imgproc.morphologyEx(grey, filteredRect, Imgproc.MORPH_CLOSE, kernelRect);
-            Imgproc.morphologyEx(grey, filteredCross, Imgproc.MORPH_CLOSE, kernelCross);
-
-            saveIntermediateInPipelineToFile(filteredEllipse, "FilteredEllipse" + i);
-            saveIntermediateInPipelineToFile(filteredRect, "FilteredRect" + i);
-            saveIntermediateInPipelineToFile(filteredCross,"FilteredCross"+i);
-
-            Mat bw = convertToBinaryAdaptiveThreshold(filteredEllipse, 49, 30, false);
-            saveIntermediateInPipelineToFile(bw, "BWElipse" + i);
-
-            bw = convertToBinaryAdaptiveThreshold(filteredRect, 49, 30, false);
-            saveIntermediateInPipelineToFile(bw, "BWRect" + i);
-
-            bw = convertToBinaryAdaptiveThreshold(filteredCross, 49, 30, false);
-            saveIntermediateInPipelineToFile(bw, "BWCross" + i);
-
+    private void drawBoxes(List<MatOfPoint> contours, Mat org, String name) {
+        Mat temp = org;
+        for (int i = 0; i<contours.size(); i++) {
+            MatOfPoint point = contours.get(i);
+            org.opencv.core.Rect rect = Imgproc.boundingRect(point);
+            if (isTextRect(rect)) {
+                // TODO: Need to filter rectangles based on white pixel density
+                Imgproc.rectangle(temp, rect.br(), rect.tl(), new Scalar(0, 0,0),10);
+            }
         }
-        return grey;
     }
 
-    private Mat getTextBoxes(Mat bwMat) {
-        long first = System.currentTimeMillis();
+    //TODO : need better conditions, look at starckoverflow example regarding text pixel density within rectangle
+    private boolean isTextRect(org.opencv.core.Rect rect) {
+        // TODO: change height and width params to get rid of random shit noise.
+        return (rect.width > rect.height) && rect.height > 10 && rect.width > 50;
+    }
 
-        // First filter image to some extent to get rid of noise
+    private List<MatOfPoint> findTextBoxes(Mat blurredMat, Mat org) {
+        long start = System.currentTimeMillis();
+        List<MatOfPoint> contours = new ArrayList<>();
+        Mat hierarchy = new Mat();
+        Imgproc.findContours(blurredMat, contours, hierarchy, Imgproc.RETR_CCOMP,
+                Imgproc.CHAIN_APPROX_SIMPLE);
+        Log.d("Faggot", "Time for finding contours in ms: " + (System.currentTimeMillis() - start));
+        Mat mask = Mat.zeros(blurredMat.size(), CvType.CV_8UC1);
+        double firstLoop = 0;
+        double secondLoop = 0;
+        for (int idx = 0; idx>=0; idx =(int) hierarchy.get(0, idx)[0]) {
+            org.opencv.core.Rect rect = Imgproc.boundingRect(contours.get(idx));
+            if (isTextRect(rect)) {
+                start = System.currentTimeMillis();
+                Mat cropped = new Mat(org, rect);
+                double r = Core.countNonZero(cropped)/rect.area();
+                firstLoop += System.currentTimeMillis() - start;
+                if (r >= WHITE_PIXEL_THRESHOLD) {
+                    start = System.currentTimeMillis();
+                    Mat maskROI = new Mat(mask, rect);
+                    maskROI.setTo(new Scalar(0, 0, 0));
+                    Imgproc.drawContours(mask, contours, idx, new Scalar(255, 255, 255), 5);
+                    r = (double)Core.countNonZero(maskROI) / rect.area();
+                    secondLoop += System.currentTimeMillis() - start ;
+                    if (r >= WHITE_PIXEL_THRESHOLD_TWO) {
+                    }
+                }
+            }
+        }
+        Log.d("Faggot", "Time for first filter in ms: " + firstLoop);
+        Log.d("Faggot","Time for second filter in ms: " + secondLoop);
+        return contours;
+    }
 
-        Mat bwFiltered = filterImage(bwMat);
+    private String showArray(double [] array) {
+        String out = "[";
+        for (int i = 0; i<array.length; i++) {
+            out+=array[i]+",";
+        }
+        out+="]";
+        return out;
+    }
 
-        // Run Stackoverflow algorithm to find text boxes by 'bleaching' white pixels
-        Mat sobel = new Mat();
-        Imgproc.Sobel(bwFiltered, sobel, CvType.CV_8U, 1, 0, 3, 1, 0, Core.BORDER_DEFAULT);
-        saveIntermediateInPipelineToFile(sobel, "SobelInt");
-        Mat threshold = new Mat();
-        Imgproc.threshold(sobel, threshold, 0, 255, Imgproc.THRESH_OTSU + Imgproc.THRESH_BINARY);
-        saveIntermediateInPipelineToFile(threshold, "ThresholdInt");
-        Mat element = Imgproc.getStructuringElement(Imgproc.CV_SHAPE_RECT, new Size(17, 3));
-        Imgproc.morphologyEx(threshold, threshold, Imgproc.MORPH_CLOSE, element);
-        saveIntermediateInPipelineToFile(threshold, "ClosedInt");
-        Log.d("Benji", "Time for getting text boxes in ms: " + (System.currentTimeMillis() - first));
-        return sobel;
+    private Mat filterImage(Mat mat) {
 
+        // First get rid of background noise pixels
+
+        Mat filtered = new Mat();
+        Mat rectKernel = Imgproc.getStructuringElement(Imgproc.CV_SHAPE_RECT, new Size(1,7));
+        Imgproc.morphologyEx(mat, filtered, Imgproc.MORPH_OPEN, rectKernel);
+
+        // Close white image pixels to get white boxes
+        Mat closeKernel = Imgproc.getStructuringElement(Imgproc.CV_SHAPE_RECT, new Size(90, 10));
+        Imgproc.morphologyEx(filtered, filtered, Imgproc.MORPH_CLOSE, closeKernel);
+        //saveIntermediateInPipelineToFile(filtered, "ClosedInt");
+        return filtered;
     }
 
     private Bitmap getTestImage() {
@@ -176,10 +206,8 @@ public class ImageUtils {
     }
 
     private Mat rescaleMat(Mat org, double scaleFactor) {
-        long first = System.currentTimeMillis();
         Mat outMat = new Mat();
         Imgproc.resize(org, outMat, new Size(), scaleFactor, scaleFactor, Imgproc.INTER_LINEAR);
-        Log.d("Benji", "Time for rescaling in ms: " + (System.currentTimeMillis() - first));
         return outMat;
     }
 
@@ -200,11 +228,9 @@ public class ImageUtils {
     }
 
     private Mat convertToBinaryAdaptiveThreshold(Mat greyscaledMat, int blockSize, int i, boolean isBlackOnWhite) {
-        long first = System.currentTimeMillis();
         Mat binaryMat = new Mat();
         Imgproc.adaptiveThreshold(greyscaledMat, binaryMat, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
                 isBlackOnWhite ? Imgproc.THRESH_BINARY : Imgproc.THRESH_BINARY_INV, blockSize, i);
-        Log.d("Benji", "Time for bwing in ms: " + (System.currentTimeMillis() - first));
         return binaryMat;
     }
 
