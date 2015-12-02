@@ -7,11 +7,10 @@ import android.graphics.Rect;
 import android.hardware.Camera;
 import android.view.SurfaceHolder;
 
-import com.nightout.idscanner.ImageUtils;
-
-import org.opencv.core.Mat;
+import com.nightout.idscanner.imageutils.ocr.OCRPreProcessor;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Created by behnamreyhani-masoleh on 15-10-23.
@@ -28,13 +27,13 @@ public class CameraManager {
     private Camera.PictureCallback mCallback;
     private boolean mCameraIsInitialized;
     private Rect mFramingRect;
-    private ImageUtils mImageUtils;
+    private OCRPreProcessor mOCRPreProcessor;
 
     public CameraManager(Context context, Camera.PictureCallback callback) {
         mContext = context;
         mCameraConfig = new CameraConfigManager(mContext);
         mCallback = callback;
-        mImageUtils = new ImageUtils(mContext);
+        mOCRPreProcessor = new OCRPreProcessor(mContext);
     }
 
     public synchronized void initCamera(SurfaceHolder holder, boolean turnLightOn) throws IOException {
@@ -110,7 +109,7 @@ public class CameraManager {
         }
     }
 
-    public Bitmap getEnhancedBitmap(byte [] data) {
-        return mImageUtils.bitmapEnhancementPipeline(data, mFramingRect, mCameraConfig.getScreenRes());
+    public List<Bitmap> getEnhancedBitmap(byte [] data) {
+        return mOCRPreProcessor.preProcessImage(data, mFramingRect, mCameraConfig.getScreenRes());
     }
 }

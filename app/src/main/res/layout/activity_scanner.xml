@@ -20,14 +20,14 @@
             android:text="Capture"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal|bottom"
+            android:layout_gravity="center_horizontal|top"
             />
 
         <ToggleButton
             android:layout_width="48dp"
             android:layout_height="40dp"
             android:id="@+id/toggleSide"
-            android:layout_gravity="center_horizontal|top"
+            android:layout_gravity="center_horizontal|bottom"
             android:button="@drawable/camera_toggle_button"/>
 
     <ToggleButton

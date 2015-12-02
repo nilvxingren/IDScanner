@@ -1,4 +1,4 @@
-package com.nightout.idscanner;
+package com.nightout.idscanner.imageutils.ocr;
 
 import android.app.ProgressDialog;
 import android.graphics.Bitmap;
@@ -7,11 +7,15 @@ import android.util.Log;
 
 import com.googlecode.tesseract.android.TessBaseAPI;
 
+import com.nightout.idscanner.ScannerActivity;
 import com.nightout.idscanner.camera.CameraManager;
+
+import java.util.List;
 
 /**
  * Created by behnamreyhani-masoleh on 15-11-02.
  */
+// Takes care of OCR using the tesseract library
 public class OCRDecodeAsyncTask extends AsyncTask<Void, Void, String> {
     private ScannerActivity mActivity;
     private byte[] mData;
@@ -35,20 +39,23 @@ public class OCRDecodeAsyncTask extends AsyncTask<Void, Void, String> {
     protected String doInBackground(Void... values) {
         long start = System.currentTimeMillis();
         String results;
-        Bitmap bitmap = mManager.getEnhancedBitmap(mData);
-        // Testing algo:
-        //Bitmap bitmap = mManager.testAlgo();
-        Log.d("Benji", "Pipeline time in ms: " + (System.currentTimeMillis() - start));
-        if (bitmap == null) {
+        List<Bitmap> bitmapList = mManager.getEnhancedBitmap(mData);
+        if (bitmapList == null || bitmapList.size() < 4) {
             return null;
         }
-        mTessAPI.setImage(bitmap);
-        results = mTessAPI.getUTF8Text();
 
-        long tessStart = System.currentTimeMillis();
-
-        Log.d("Benji", "Time taken for Tess in ms: " + (System.currentTimeMillis() - tessStart));
-        Log.d("Benji", "Results with rescale:\n" + results);
+        //TODO: decode images concurrently on seperate threads for speed
+        int i = 0;
+        start = System.currentTimeMillis();
+        // Run OCR on each extracted textbox from preprocessing
+        for (Bitmap bitmap : bitmapList) {
+            long tessStart = System.currentTimeMillis();
+            mTessAPI.setImage(bitmap);
+            results = mTessAPI.getUTF8Text();
+          //  Log.d("Faggot", "Time taken for Tess in ms for textbox #" + i + ": " + (System.currentTimeMillis() - tessStart));
+            //Log.d("Faggot", "Results with rescale for textbox #" + i + ":\n" + results);
+            i++;
+        }
         return "\nTime Required in ms with rescale: " + (System.currentTimeMillis() - start);
     }
 

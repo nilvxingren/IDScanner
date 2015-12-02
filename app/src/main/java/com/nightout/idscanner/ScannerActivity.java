@@ -17,6 +17,7 @@ import android.widget.ToggleButton;
 
 import com.nightout.idscanner.camera.CameraManager;
 import com.googlecode.tesseract.android.TessBaseAPI;
+import com.nightout.idscanner.imageutils.ocr.OCRDecodeAsyncTask;
 
 import org.opencv.android.OpenCVLoader;
 
@@ -75,7 +76,11 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
 
             @Override
             public void onPictureTaken(byte[] data, Camera camera) {
-                new OCRDecodeAsyncTask(ScannerActivity.this, data, mCameraManager, mTessAPI).execute();
+                if (isForOCR()) {
+		    new OCRDecodeAsyncTask(ScannerActivity.this, data, mCameraManager, mTessAPI).execute();
+		} else {
+
+                }
             }
         });
 
@@ -90,7 +95,6 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
                 try {
                     mCameraManager.adjustFramingRect(isChecked);
                     mViewFinder.invalidate();
-                   // mTessAPI.setRectangle();
                 } catch (Exception e){
                     Log.e("Ben", "exception", e);
                 }
@@ -314,4 +318,10 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
                 }).create().show();
     }
 
+    private boolean isForOCR() {
+	if (mCardSideButton != null) {
+	   return mCardSideButton.isChecked();
+	}
+        return false;
+    }
 }

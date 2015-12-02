@@ -66,13 +66,6 @@ public class CameraConfigManager {
             return;
         }
 
-       /* String effectMode = findSettableValue(params.getSupportedColorEffects(),
-                Camera.Parameters.EFFECT_MONO);
-
-        if (effectMode != null) {
-            params.setColorEffect(effectMode);
-        }*/
-
         String focusMode = findSettableValue(params.getSupportedFocusModes(),
                 Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE,
                 Camera.Parameters.FOCUS_MODE_AUTO,
@@ -200,5 +193,4 @@ public class CameraConfigManager {
     }
 
     public Point getCameraRes() { return mCameraRes; }
-
 }
