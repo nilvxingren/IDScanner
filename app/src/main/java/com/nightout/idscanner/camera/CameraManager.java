@@ -7,7 +7,7 @@ import android.graphics.Rect;
 import android.hardware.Camera;
 import android.view.SurfaceHolder;
 
-import com.nightout.idscanner.imageutils.ocr.OCRPreProcessor;
+import com.nightout.idscanner.imageutils.ImagePreProcessor;
 
 import java.io.IOException;
 import java.util.List;
@@ -27,13 +27,13 @@ public class CameraManager {
     private Camera.PictureCallback mCallback;
     private boolean mCameraIsInitialized;
     private Rect mFramingRect;
-    private OCRPreProcessor mOCRPreProcessor;
+    private ImagePreProcessor mImagePreProcessor;
 
     public CameraManager(Context context, Camera.PictureCallback callback) {
         mContext = context;
         mCameraConfig = new CameraConfigManager(mContext);
         mCallback = callback;
-        mOCRPreProcessor = new OCRPreProcessor(mContext);
+        mImagePreProcessor = new ImagePreProcessor(mContext);
     }
 
     public synchronized void initCamera(SurfaceHolder holder, boolean turnLightOn) throws IOException {
@@ -110,6 +110,10 @@ public class CameraManager {
     }
 
     public List<Bitmap> getEnhancedBitmap(byte [] data) {
-        return mOCRPreProcessor.preProcessImage(data, mFramingRect, mCameraConfig.getScreenRes());
+        return mImagePreProcessor.preProcessImageForOCR(data, mFramingRect, mCameraConfig.getScreenRes());
+    }
+
+    public Bitmap getBarcodeRect(byte [] data) {
+        return mImagePreProcessor.preProcessImageForPDF417(data, mFramingRect, mCameraConfig.getScreenRes());
     }
 }

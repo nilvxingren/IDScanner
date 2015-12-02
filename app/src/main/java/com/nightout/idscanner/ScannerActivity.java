@@ -15,9 +15,11 @@ import android.view.WindowManager;
 import android.widget.CompoundButton;
 import android.widget.ToggleButton;
 
+import com.google.zxing.pdf417.PDF417Reader;
 import com.nightout.idscanner.camera.CameraManager;
 import com.googlecode.tesseract.android.TessBaseAPI;
 import com.nightout.idscanner.imageutils.ocr.OCRDecodeAsyncTask;
+import com.nightout.idscanner.imageutils.pdf417.PDF417DecodeAsyncTask;
 
 import org.opencv.android.OpenCVLoader;
 
@@ -35,6 +37,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
     private CameraManager mCameraManager;
     private boolean mHasSurface;
     private TessBaseAPI mTessAPI;
+    private PDF417Reader mBarcodeReader;
 
     static {
         if (!OpenCVLoader.initDebug()) {
@@ -65,6 +68,8 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
             }).start();
         }
 
+        mBarcodeReader = new PDF417Reader();
+
         //TODO: only support barcode scanning, show error msg for now and exit app
         if (!initOCR()) {
             showErrorMessage("Error", "There was a problem with the ID scanner.");
@@ -77,9 +82,9 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
             @Override
             public void onPictureTaken(byte[] data, Camera camera) {
                 if (isForOCR()) {
-		    new OCRDecodeAsyncTask(ScannerActivity.this, data, mCameraManager, mTessAPI).execute();
-		} else {
-
+                    new OCRDecodeAsyncTask(ScannerActivity.this, data, mCameraManager, mTessAPI).execute();
+		        } else {
+                    new PDF417DecodeAsyncTask(ScannerActivity.this, data, mCameraManager, mBarcodeReader).execute();
                 }
             }
         });
