@@ -3,6 +3,20 @@
   <component name="EntryPointsManager">
     <entry_points version="2.0" />
   </component>
+  <component name="MavenProjectsManager">
+    <option name="originalFiles">
+      <list>
+        <option value="$USER_HOME$/Downloads/zxing-master/javase/pom.xml" />
+        <option value="$USER_HOME$/Downloads/zxing-master/core/pom.xml" />
+      </list>
+    </option>
+    <option name="ignoredFiles">
+      <set>
+        <option value="$PROJECT_DIR$/libraries/core/pom.xml" />
+        <option value="$PROJECT_DIR$/libraries/javase/pom.xml" />
+      </set>
+    </option>
+  </component>
   <component name="NullableNotNullManager">
     <option name="myDefaultNullable" value="android.support.annotation.Nullable" />
     <option name="myDefaultNotNull" value="android.support.annotation.NonNull" />
