@@ -13,6 +13,7 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
@@ -44,21 +45,16 @@ public class ImagePreProcessor {
     public Bitmap preProcessImageForPDF417(byte [] data, Rect frame, android.graphics.Point screenRes) {
         Bitmap bm = null;
         try {
-            //bm = getCroppedBitmapFromData(data, frame, screenRes);
-            Log.d("Faggot","getting test image");
-            bm = getTestImage(false);
+            //TODO: have to add anti-blurring/noise
+            bm = getCroppedBitmapFromData(data, frame, screenRes);
+//            bm = getTestImage(false);
 
-            long start = System.currentTimeMillis();
             Mat greyscaledMat = convertMatToGrayScale(bm);
-           // saveIntermediateInPipelineToFile(greyscaledMat,"Grey");
 
             Mat blurredAdaptive = getBlurredBWUsingAdaptive(greyscaledMat);
-           // saveIntermediateInPipelineToFile(blurredAdaptive, "BlurredAdaptive");
 
             bm = cropForPDF417(blurredAdaptive, bm);
-            Log.d("Faggot","Time takes for Pre-processing in ms: " + (System.currentTimeMillis() - start));
-            saveIntermediateInPipelineToFile(bm, "FinalBM");
-
+            saveIntermediateInPipelineToFile(bm, "FinalBW");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -129,6 +125,11 @@ public class ImagePreProcessor {
                     pdfRect = rect;
                 }
             }
+        }
+        if (pdfRect == null) {
+            Log.d("Faggot","No rectangles found for pdf");
+        } else {
+            Log.d("Faggot","Rectangle coordinates: " + pdfRect.br() + "-" + pdfRect.tl());
         }
         return getBitmapFromOpenCVRect(org, pdfRect);
     }
@@ -215,12 +216,12 @@ public class ImagePreProcessor {
         // First get rid of background noise pixels
         Mat rectKernel = Imgproc.getStructuringElement(Imgproc.CV_SHAPE_RECT, new Size(1, 11));
         Imgproc.morphologyEx(blurred, blurred, Imgproc.MORPH_OPEN, rectKernel);
-        //saveIntermediateInPipelineToFile(blurred,"Opened");
+        saveIntermediateInPipelineToFile(blurred,"Opened");
 
         // Close white image pixels to get white boxes
         Mat closeKernel = Imgproc.getStructuringElement(Imgproc.CV_SHAPE_RECT, new Size(80, 1));
         Imgproc.morphologyEx(blurred, blurred, Imgproc.MORPH_CLOSE, closeKernel);
-        //saveIntermediateInPipelineToFile(blurred, "Closed");
+        saveIntermediateInPipelineToFile(blurred, "Closed");
         return blurred;
     }
 
@@ -232,11 +233,10 @@ public class ImagePreProcessor {
         return bitmap;
     }
 
-    private double calculateSkewAngle(Mat greyScaledMat) {
-        Mat whiteOnBlackMat = convertToBinaryAdaptiveThreshold(greyScaledMat, 161, 38, false);
+    private double calculateSkewAngle(Mat bw) {
         Mat lines = new Mat();
         double angle = 0;
-        Imgproc.HoughLinesP(whiteOnBlackMat, lines, 1, Math.PI / 180, 100, whiteOnBlackMat.width() / 2.5, 60);
+        Imgproc.HoughLinesP(bw, lines, 1, Math.PI / 180, 100, bw.width() / 2.5, 60);
         if (!lines.empty()) {
             for (int i = 0; i < lines.rows(); i++) {
                 double [] linePoints = lines.get(i,0);
@@ -257,7 +257,6 @@ public class ImagePreProcessor {
 
 
     private Mat convertMatToGrayScale(Bitmap org) {
-        long first = System.currentTimeMillis();
         Mat grayScaled = new Mat();
         Mat orgMat = new Mat();
         Utils.bitmapToMat(org, orgMat);
@@ -337,6 +336,7 @@ public class ImagePreProcessor {
     }
 
     private void saveIntermediateInPipelineToFile(Bitmap intermediate, String fileName) {
+        Log.d("faggot", "saving shit");
         saveBitmapToFile(intermediate, new File(getExternalAlbumStorageDir("nightout"), fileName + ".png"));
     }
 
