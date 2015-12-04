@@ -116,4 +116,8 @@ public class CameraManager {
     public Bitmap getBarcodeRect(byte [] data) {
         return mImagePreProcessor.preProcessImageForPDF417(data, mFramingRect, mCameraConfig.getScreenRes());
     }
+
+    public void saveErrorImage(Bitmap bm, String fileName) {
+        mImagePreProcessor.saveErrorImage(bm, fileName);
+    }
 }

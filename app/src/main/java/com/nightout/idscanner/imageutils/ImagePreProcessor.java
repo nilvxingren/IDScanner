@@ -8,12 +8,13 @@ import android.graphics.Rect;
 import android.os.Environment;
 import android.util.Log;
 
+import com.nightout.idscanner.ErrorStats;
+
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
-import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
@@ -52,9 +53,14 @@ public class ImagePreProcessor {
             Mat greyscaledMat = convertMatToGrayScale(bm);
 
             Mat blurredAdaptive = getBlurredBWUsingAdaptive(greyscaledMat);
+            Bitmap tmp = bm;
 
             bm = cropForPDF417(blurredAdaptive, bm);
-            saveIntermediateInPipelineToFile(bm, "FinalBW");
+
+            if (bm == null) {
+                saveErrorImage(tmp, ErrorStats.incrementExceptionCountAndGetFileName(new Exception()));
+            }
+//            saveIntermediateInPipelineToFile(bm, "FinalBW");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -115,6 +121,11 @@ public class ImagePreProcessor {
         Imgproc.findContours(blurredMat, contours, hierarchy, Imgproc.RETR_CCOMP,
                 Imgproc.CHAIN_APPROX_SIMPLE);
 
+        // Indicates that no barcode was found in pre-processing, send message of error back early
+        if (hierarchy.empty()) {
+            return null;
+        }
+
         org.opencv.core.Rect pdfRect = null;
         for (int idx = 0; idx>=0; idx = (int) hierarchy.get(0,idx)[0]) {
             org.opencv.core.Rect rect = Imgproc.boundingRect(contours.get(idx));
@@ -126,11 +137,12 @@ public class ImagePreProcessor {
                 }
             }
         }
+
         if (pdfRect == null) {
             Log.d("Faggot","No rectangles found for pdf");
-        } else {
-            Log.d("Faggot","Rectangle coordinates: " + pdfRect.br() + "-" + pdfRect.tl());
+            return null;
         }
+
         return getBitmapFromOpenCVRect(org, pdfRect);
     }
 
@@ -216,12 +228,12 @@ public class ImagePreProcessor {
         // First get rid of background noise pixels
         Mat rectKernel = Imgproc.getStructuringElement(Imgproc.CV_SHAPE_RECT, new Size(1, 11));
         Imgproc.morphologyEx(blurred, blurred, Imgproc.MORPH_OPEN, rectKernel);
-        saveIntermediateInPipelineToFile(blurred,"Opened");
+//        saveIntermediateInPipelineToFile(blurred,"Opened");
 
         // Close white image pixels to get white boxes
         Mat closeKernel = Imgproc.getStructuringElement(Imgproc.CV_SHAPE_RECT, new Size(80, 1));
         Imgproc.morphologyEx(blurred, blurred, Imgproc.MORPH_CLOSE, closeKernel);
-        saveIntermediateInPipelineToFile(blurred, "Closed");
+       // saveIntermediateInPipelineToFile(blurred, "Closed");
         return blurred;
     }
 
@@ -346,4 +358,22 @@ public class ImagePreProcessor {
         saveIntermediateInPipelineToFile(outBM, fileName);
 
     }
+
+    public void saveErrorImage(Bitmap scannedBarcode, String fileName) {
+        saveBitmapToFile(scannedBarcode, new File(getExternalAlbumStorageDir("nightout/Error/"
+                + getCorrectDirectoryFromFileName(fileName)), fileName + ".png"));
+    }
+
+    private String getCorrectDirectoryFromFileName(String fileName) {
+        String subDir = "Normal";
+        if (fileName.contains("CheckSum")) {
+            subDir = "CheckSum";
+        } else if (fileName.contains("Format")) {
+            subDir = "Format";
+        } else if (fileName.contains("NotFound")) {
+            subDir = "NotFound";
+        }
+        return subDir;
+    }
+
 }

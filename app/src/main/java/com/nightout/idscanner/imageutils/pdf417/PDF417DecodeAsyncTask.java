@@ -16,6 +16,7 @@ import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.pdf417.PDF417Reader;
 import com.googlecode.tesseract.android.TessBaseAPI;
+import com.nightout.idscanner.ErrorStats;
 import com.nightout.idscanner.ScannerActivity;
 import com.nightout.idscanner.camera.CameraManager;
 
@@ -31,6 +32,9 @@ public class PDF417DecodeAsyncTask extends AsyncTask<Void, Void, String> {
     private CameraManager mManager;
     private ProgressDialog mDialog;
     private PDF417Reader mBarcodeReader;
+
+    // TODO: need to change error handling, just for simplification during testing phase purposes
+    private static final String ERROR_RESPONSE = "ERROR";
 
     public PDF417DecodeAsyncTask(ScannerActivity activity, byte[] data, CameraManager manager, PDF417Reader scanner ) {
         mActivity = activity;
@@ -49,19 +53,26 @@ public class PDF417DecodeAsyncTask extends AsyncTask<Void, Void, String> {
         long start = System.currentTimeMillis();
         String results = "";
         Bitmap pdf417Barcode = mManager.getBarcodeRect(mData);
+
         if (pdf417Barcode == null) {
-            return null;
+            return ERROR_RESPONSE;
         }
+
         try {
             Result result = mBarcodeReader.decode(bitmapToBinaryBitmap(pdf417Barcode));
             if (result.getText() != null) {
                 results = result.getText();
             }
         } catch (Exception e) {
+            mManager.saveErrorImage(pdf417Barcode,
+                    ErrorStats.incrementExceptionCountAndGetFileName(e));
             e.printStackTrace();
+            return ERROR_RESPONSE;
         }
+
         Log.d("Faggot","Results from barcode scanning:\n" + results);
-        Log.d("Faggot","Time taken for scanning in ms: " + (System.currentTimeMillis() - start));
+        Log.d("Faggot", "Time taken for scanning in ms: " + (System.currentTimeMillis() - start));
+        results += "\nTime taken for scanning in ms: " + (System.currentTimeMillis() - start);
         return results;
     }
 
