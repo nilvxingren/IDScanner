@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapRegionDecoder;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Environment;
 import android.util.Log;
@@ -31,8 +32,9 @@ import java.util.List;
 public class ImagePreProcessor {
 
 
-    private static final double WIDTH_BUFFER = 0.05;
     private static final double IMAGE_SCALE_FACTOR = 0.50;
+    private static final int WIDTH_BUFFER_RATIO = 14;
+    private static final int HEIGHT_BUFFER_RATIO = 14;
     private static final int TEXT_BOX_CROP_PIXEL_BUFFER = 20;
     private static final double WHITE_PIXEL_THRESHOLD = 0.15;
     private static final double WHITE_PIXEL_THRESHOLD_TWO = 0.15;
@@ -60,7 +62,7 @@ public class ImagePreProcessor {
             if (bm == null) {
                 saveErrorImage(tmp, ErrorStats.incrementExceptionCountAndGetFileName(new Exception()));
             }
-//            saveIntermediateInPipelineToFile(bm, "FinalBW");
+            //saveIntermediateInPipelineToFile(bm, "FinalBW");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -310,14 +312,16 @@ public class ImagePreProcessor {
         int height = decoder.getHeight();
         int width = decoder.getWidth();
 
-        int left = frame.left * width / screenRes.x;
-        int top = frame.top * height / screenRes.y;
-        int right = frame.right * width / screenRes.x;
-        int bottom = frame.bottom * height / screenRes.y;
+        double heightBuffer = (double) screenRes.y/HEIGHT_BUFFER_RATIO;
+        double widthBuffer = (double) screenRes.x/WIDTH_BUFFER_RATIO;
 
-        int widthBuffer = (int)((right - left) * WIDTH_BUFFER);
-        return decoder.decodeRegion(new Rect(left - widthBuffer, top,
-                right + widthBuffer, bottom), null);
+        Double left = ((double)frame.left/screenRes.x)*width - widthBuffer;
+        Double top =  ((double)frame.top/screenRes.y)*height - heightBuffer;
+        Double right = ((double)frame.right/screenRes.x)*width + widthBuffer;
+        Double bottom = ((double)frame.bottom/screenRes.y)*height + heightBuffer;
+;
+        return decoder.decodeRegion(new Rect(left.intValue(), top.intValue(),
+                right.intValue(), bottom.intValue()), null);
     }
 
      private File getExternalAlbumStorageDir(String albumName) {

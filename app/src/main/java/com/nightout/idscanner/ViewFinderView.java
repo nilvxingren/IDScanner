@@ -57,7 +57,7 @@ public final class ViewFinderView extends View {
             canvas.drawRect(frame.right - 1, frame.top, frame.right + 1, frame.bottom - 1, paint);
             canvas.drawRect(frame.left, frame.bottom - 1, frame.right + 1, frame.bottom + 1, paint);
         } catch (NullPointerException e) {
-            Log.e("Ben", "exception", e);
+            e.printStackTrace();
         }
     }
 

@@ -80,9 +80,9 @@ public class CameraConfigManager {
         camera.setParameters(params);
     }
 
-    void setCameraLightParams(Camera camera, boolean turnLightOn) {
+    boolean setCameraLightParams(Camera camera, boolean turnLightOn) {
         if (camera == null) {
-            return;
+            return false;
         }
 
         Camera.Parameters params = camera.getParameters();
@@ -100,8 +100,9 @@ public class CameraConfigManager {
         if (torch != null) {
             params.setFlashMode(torch);
             camera.setParameters(params);
+            return true;
         }
-
+        return false;
     }
 
     private Point findBestPreviewSizeValue(Camera.Parameters parameters) {

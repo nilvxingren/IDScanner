@@ -101,7 +101,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
                     mCameraManager.adjustFramingRect(isChecked);
                     mViewFinder.invalidate();
                 } catch (Exception e){
-                    Log.e("Ben", "exception", e);
+                    e.printStackTrace();
                 }
             }
         });
@@ -111,9 +111,13 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 try {
-                    mCameraManager.setLightMode(isChecked);
+                    if (mCameraManager.setLightMode(isChecked)){
+                        mCameraManager.adjustFramingRect((
+                                ((ToggleButton) findViewById(R.id.toggleSide)).isChecked()));
+                        mViewFinder.invalidate();
+                    }
                 } catch (Exception e) {
-                    Log.e("Ben", "exception", e);
+                    e.printStackTrace();
                 }
             }
         });
@@ -125,6 +129,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
                     try {
                         mCameraManager.takePicture();
                     } catch (Exception e) {
+                        e.printStackTrace();
                         showErrorMessage("Camera Hardware Error", "There was a problem with the camera hardware.");
                     }
             }

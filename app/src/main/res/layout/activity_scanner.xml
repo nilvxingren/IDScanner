@@ -27,14 +27,14 @@
             android:layout_width="48dp"
             android:layout_height="40dp"
             android:id="@+id/toggleSide"
-            android:layout_gravity="center_horizontal|bottom"
+            android:layout_gravity="top|right"
             android:button="@drawable/camera_toggle_button"/>
 
     <ToggleButton
         android:layout_width="48dp"
         android:layout_height="40dp"
         android:id="@+id/toggleFlash"
-        android:layout_gravity="top"
+        android:layout_gravity="top|left"
         android:textOn="Flash is on"
         android:textOff="Flash is off"/>
 </FrameLayout>
