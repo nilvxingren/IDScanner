@@ -146,6 +146,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
             try {
                 startCamera(holder, mLightButton.isChecked());
                 mCameraManager.adjustFramingRect(mCardSideButton.isChecked());
+                mViewFinder.invalidate();
                 //mTessAPI.setRectangle();
             } catch (Exception e) {
                 Log.e("Ben", "exception", e);

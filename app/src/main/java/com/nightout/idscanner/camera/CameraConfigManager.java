@@ -7,6 +7,8 @@ import android.hardware.Camera;
 import android.view.Display;
 import android.view.WindowManager;
 
+import com.nightout.idscanner.imageutils.ImagePreProcessor;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -19,6 +21,8 @@ import java.util.List;
 public class CameraConfigManager {
     private static final int MIN_PREVIEW_PIXELS = 470 * 320; // normal screen
     private static final int MAX_PREVIEW_PIXELS = 800 * 600; // more than large/HD screen
+    private static final float MAX_EXPOSURE_COMPENSATION = 1.5f;
+    private static final float MIN_EXPOSURE_COMPENSATION = 0.0f;
 
     private Context mContext;
     private Point mScreenRes;
@@ -44,30 +48,18 @@ public class CameraConfigManager {
         }
         mScreenRes = new Point(width, height);
         mCameraRes = findBestPreviewSizeValue(params);
-    }
 
-    void setFocusArea(Camera camera, Rect focusAreaRect) {
-        Camera.Parameters params = camera.getParameters();
-        if (params.getMaxNumFocusAreas() == 0) {
-            return;
+        if (params.isVideoStabilizationSupported()) {
+            params.setVideoStabilization(true);
+            camera.setParameters(params);
         }
-        List<Camera.Area> convertedCameraFocusArea = convertToCameraFocusArea(focusAreaRect);
-        params.setFocusAreas(convertedCameraFocusArea);
-        camera.setParameters(params);
     }
 
     void setCameraDefaultParams(Camera camera) {
-        if (camera == null) {
-            return;
-        }
-
         Camera.Parameters params = camera.getParameters();
-        if (params == null) {
-            return;
-        }
-
         String focusMode = findSettableValue(params.getSupportedFocusModes(),
                 Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE,
+                Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO,
                 Camera.Parameters.FOCUS_MODE_AUTO,
                 Camera.Parameters.FOCUS_MODE_MACRO,
                 Camera.Parameters.FOCUS_MODE_EDOF);
@@ -80,11 +72,56 @@ public class CameraConfigManager {
         camera.setParameters(params);
     }
 
-    boolean setCameraLightParams(Camera camera, boolean turnLightOn) {
-        if (camera == null) {
-            return false;
+    void setSceneMode(Camera camera, boolean isForOCR, boolean isLightOn) {
+        Camera.Parameters params = camera.getParameters();
+        String desiredSceneMode = null;
+
+        // STEADYPHOTO mode and others may turn off light, therefore don't set scene when light is on
+        if (isLightOn) {
+            desiredSceneMode = findSettableValue(params.getSupportedSceneModes(),
+                    Camera.Parameters.SCENE_MODE_AUTO);
+        } else {
+            if (isForOCR) {
+                desiredSceneMode = findSettableValue(params.getSupportedSceneModes(),
+                        Camera.Parameters.SCENE_MODE_STEADYPHOTO,
+                        Camera.Parameters.SCENE_MODE_BARCODE,
+                        Camera.Parameters.SCENE_MODE_AUTO,
+                        Camera.Parameters.SCENE_MODE_LANDSCAPE
+                );
+            } else {
+                desiredSceneMode = findSettableValue(params.getSupportedSceneModes(),
+                        Camera.Parameters.SCENE_MODE_BARCODE,
+                        Camera.Parameters.SCENE_MODE_STEADYPHOTO,
+                        Camera.Parameters.SCENE_MODE_AUTO,
+                        Camera.Parameters.SCENE_MODE_LANDSCAPE
+                );
+            }
         }
 
+        if (desiredSceneMode != null) {
+            params.setSceneMode(desiredSceneMode);
+            camera.setParameters(params);
+        }
+    }
+
+    void setFocusAndMeteringArea(Camera camera, Rect focusAreaRect) {
+        Camera.Parameters params = camera.getParameters();
+        List<Camera.Area> convertedCameraFocusArea = convertToCameraParamsFocusArea(focusAreaRect);
+
+        if (params.getMaxNumFocusAreas() > 0) {
+            params.setFocusAreas(convertedCameraFocusArea);
+        }
+
+        if (params.getMaxNumMeteringAreas() > 0) {
+            params.setMeteringAreas(convertedCameraFocusArea);
+
+        }
+        camera.setParameters(params);
+    }
+
+
+
+    boolean setCameraLightParams(Camera camera, boolean turnLightOn) {
         Camera.Parameters params = camera.getParameters();
 
         String torch = null;
@@ -98,11 +135,32 @@ public class CameraConfigManager {
         }
 
         if (torch != null) {
+
             params.setFlashMode(torch);
+            // TODO: Might be better compensated outdoors
+            //setBestExposure(params, turnLightOn);
             camera.setParameters(params);
             return true;
         }
         return false;
+    }
+
+    void setBestExposure(Camera.Parameters parameters, boolean lightOn) {
+        int minExposure = parameters.getMinExposureCompensation();
+        int maxExposure = parameters.getMaxExposureCompensation();
+
+        float step = parameters.getExposureCompensationStep();
+        if ((minExposure != 0 || maxExposure != 0) && step > 0.0f) {
+            // Set low when light is on
+            float targetCompensation = lightOn ? MIN_EXPOSURE_COMPENSATION : MAX_EXPOSURE_COMPENSATION;
+            int compensationSteps = Math.round(targetCompensation / step);
+            // Clamp value:
+            compensationSteps = Math.max(Math.min(compensationSteps, maxExposure), minExposure);
+
+            if (parameters.getExposureCompensation() != compensationSteps) {
+                parameters.setExposureCompensation(compensationSteps);
+            }
+        }
     }
 
     private Point findBestPreviewSizeValue(Camera.Parameters parameters) {
@@ -178,13 +236,18 @@ public class CameraConfigManager {
         return result;
     }
 
-    private List<Camera.Area> convertToCameraFocusArea(Rect focusArea) {
+    private List<Camera.Area> convertToCameraParamsFocusArea(Rect focusArea) {
         List<Camera.Area>list = new ArrayList<>();
-        Camera.Area area = new Camera.Area(new Rect(
-                ((focusArea.left) * (2000/mScreenRes.x)) - 1000,
-                ((focusArea.top) * (2000/mScreenRes.y)) - 1000,
-                ((focusArea.right) * (2000/mScreenRes.x)) - 1000,
-                ((focusArea.bottom) * (2000/mScreenRes.y)) - 1000),1000);
+
+        double heightBuffer = (double) mScreenRes.y/ ImagePreProcessor.HEIGHT_BUFFER_RATIO;
+        double widthBuffer = (double) mScreenRes.x/ImagePreProcessor.WIDTH_BUFFER_RATIO;
+
+        Double left = ((double)focusArea.left/mScreenRes.x)*2000 - widthBuffer;
+        Double top =  ((double)focusArea.top/mScreenRes.y)*2000 - heightBuffer;
+        Double right = ((double)focusArea.right/mScreenRes.x)*2000 + widthBuffer;
+        Double bottom = ((double)focusArea.bottom/mScreenRes.y)*2000 + heightBuffer;
+        Camera.Area area = new Camera.Area(new Rect( left.intValue() - 1000, top.intValue() - 1000,
+                right.intValue() - 1000, bottom.intValue() - 1000),1);
         list.add(area);
         return list;
     }
