@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.hardware.Camera;
+import android.util.Log;
 import android.view.SurfaceHolder;
 
 import com.nightout.idscanner.imageutils.ImagePreProcessor;
@@ -62,6 +63,7 @@ public class CameraManager {
     }
 
     public boolean setLightMode(boolean turnLightOn) {
+        mCameraConfig.setSceneMode(mCamera, true, turnLightOn);
         if (mCameraConfig.setCameraLightParams(mCamera, turnLightOn)) {
             mIsLightOn = turnLightOn;
             return true;
@@ -83,7 +85,8 @@ public class CameraManager {
 
         mFramingRect = new Rect(leftOffset, topOffset,
                 leftOffset + newWidth, topOffset + newHeight);
-        mCameraConfig.setFocusArea(mCamera, mFramingRect);
+        mCameraConfig.setFocusAndMeteringArea(mCamera, mFramingRect);
+        mCameraConfig.setSceneMode(mCamera, isForOCR, mIsLightOn);
     }
 
     public synchronized Rect getFramingRect() {
@@ -128,6 +131,10 @@ public class CameraManager {
 
     public void saveErrorImage(Bitmap bm, String fileName) {
         mImagePreProcessor.saveErrorImage(bm, fileName);
+    }
+
+    public Camera getCamera(){
+        return mCamera;
     }
 
     public Point getCameraRes() {

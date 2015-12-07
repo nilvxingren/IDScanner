@@ -33,8 +33,8 @@ public class ImagePreProcessor {
 
 
     private static final double IMAGE_SCALE_FACTOR = 0.50;
-    private static final int WIDTH_BUFFER_RATIO = 14;
-    private static final int HEIGHT_BUFFER_RATIO = 14;
+    public static final int WIDTH_BUFFER_RATIO = 14;
+    public static final int HEIGHT_BUFFER_RATIO = 14;
     private static final int TEXT_BOX_CROP_PIXEL_BUFFER = 20;
     private static final double WHITE_PIXEL_THRESHOLD = 0.15;
     private static final double WHITE_PIXEL_THRESHOLD_TWO = 0.15;
@@ -45,13 +45,13 @@ public class ImagePreProcessor {
         mContext = context;
     }
 
-    public Bitmap preProcessImageForPDF417(byte [] data, Rect frame, android.graphics.Point screenRes) {
+    public Bitmap preProcessImageForPDF417(byte [] data, Rect frame, Point screenRes) {
         Bitmap bm = null;
         try {
             //TODO: have to add anti-blurring/noise
             bm = getCroppedBitmapFromData(data, frame, screenRes);
 //            bm = getTestImage(false);
-
+            saveIntermediateInPipelineToFile(bm,"Test");
             Mat greyscaledMat = convertMatToGrayScale(bm);
 
             Mat blurredAdaptive = getBlurredBWUsingAdaptive(greyscaledMat);
@@ -70,7 +70,7 @@ public class ImagePreProcessor {
     }
 
 
-    public List<Bitmap> preProcessImageForOCR(byte [] data, Rect frame, android.graphics.Point screenRes) {
+    public List<Bitmap> preProcessImageForOCR(byte [] data, Rect frame, Point screenRes) {
         Bitmap bm;
         List<Bitmap> textBoxList = null;
         try {
@@ -307,7 +307,7 @@ public class ImagePreProcessor {
         return binaryMat;
     }
 
-    private Bitmap getCroppedBitmapFromData(byte [] data, Rect frame, android.graphics.Point screenRes) throws Exception {
+    private Bitmap getCroppedBitmapFromData(byte [] data, Rect frame, Point screenRes) throws Exception {
         BitmapRegionDecoder decoder = BitmapRegionDecoder.newInstance(data, 0, data.length, false);
         int height = decoder.getHeight();
         int width = decoder.getWidth();
@@ -319,12 +319,12 @@ public class ImagePreProcessor {
         Double top =  ((double)frame.top/screenRes.y)*height - heightBuffer;
         Double right = ((double)frame.right/screenRes.x)*width + widthBuffer;
         Double bottom = ((double)frame.bottom/screenRes.y)*height + heightBuffer;
-;
+
         return decoder.decodeRegion(new Rect(left.intValue(), top.intValue(),
                 right.intValue(), bottom.intValue()), null);
     }
 
-     private File getExternalAlbumStorageDir(String albumName) {
+    private File getExternalAlbumStorageDir(String albumName) {
         // Get the directory for the user's public pictures directory.
         File file = new File(Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_PICTURES), albumName);
@@ -352,7 +352,6 @@ public class ImagePreProcessor {
     }
 
     private void saveIntermediateInPipelineToFile(Bitmap intermediate, String fileName) {
-        Log.d("faggot", "saving shit");
         saveBitmapToFile(intermediate, new File(getExternalAlbumStorageDir("nightout"), fileName + ".png"));
     }
 
