@@ -4,6 +4,8 @@ import android.content.Context;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.hardware.Camera;
+import android.media.Image;
+import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 
