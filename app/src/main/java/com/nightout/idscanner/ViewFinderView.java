@@ -6,7 +6,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 
 import com.nightout.idscanner.camera.CameraManager;
@@ -15,7 +14,6 @@ import com.nightout.idscanner.camera.CameraManager;
  * Created by behnamreyhani-masoleh on 15-10-23.
  */
 public final class ViewFinderView extends View {
-
     private static final String VIEWFINDER_EXTERIOR_COLOR = "#60000000";
     private static final String VIEWFINDER_INTERIOR_COLOR = "#ffd6d6d6";
 

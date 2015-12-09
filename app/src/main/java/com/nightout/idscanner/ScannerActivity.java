@@ -156,7 +156,6 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
         }
     }
 
-
     @Override
     protected void onDestroy() {
         if (mTessAPI != null) {
@@ -331,7 +330,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
 
     private boolean isForOCR() {
 	if (mCardSideButton != null) {
-	   return mCardSideButton.isChecked();
+        return mCardSideButton.isChecked();
 	}
         return false;
     }

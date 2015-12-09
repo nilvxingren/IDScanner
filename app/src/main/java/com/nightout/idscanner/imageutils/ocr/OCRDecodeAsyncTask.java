@@ -3,7 +3,6 @@ package com.nightout.idscanner.imageutils.ocr;
 import android.app.ProgressDialog;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
-import android.util.Log;
 
 import com.googlecode.tesseract.android.TessBaseAPI;
 
@@ -46,7 +45,6 @@ public class OCRDecodeAsyncTask extends AsyncTask<Void, Void, String> {
 
         //TODO: decode images concurrently on seperate threads for speed
         int i = 0;
-        start = System.currentTimeMillis();
         // Run OCR on each extracted textbox from preprocessing
         for (Bitmap bitmap : bitmapList) {
             long tessStart = System.currentTimeMillis();

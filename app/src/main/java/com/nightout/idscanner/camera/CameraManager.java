@@ -5,7 +5,6 @@ import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.hardware.Camera;
-import android.util.Log;
 import android.view.SurfaceHolder;
 
 import com.nightout.idscanner.imageutils.ImagePreProcessor;
@@ -63,7 +62,7 @@ public class CameraManager {
     }
 
     public boolean setLightMode(boolean turnLightOn) {
-        mCameraConfig.setSceneMode(mCamera, true, turnLightOn);
+       // mCameraConfig.setSceneMode(mCamera, true, turnLightOn);
         if (mCameraConfig.setCameraLightParams(mCamera, turnLightOn)) {
             mIsLightOn = turnLightOn;
             return true;
@@ -75,6 +74,7 @@ public class CameraManager {
         if (!mCameraIsInitialized) {
             return;
         }
+
         // Move the rectangle to the bottom of the screen if light is on to avoid shine
         Point screenRes = mCameraConfig.getScreenRes();
         int newWidth = isForOCR ? OCR_FRAME_WIDTH : BC_FRAME_WIDTH;
@@ -86,25 +86,11 @@ public class CameraManager {
         mFramingRect = new Rect(leftOffset, topOffset,
                 leftOffset + newWidth, topOffset + newHeight);
         mCameraConfig.setFocusAndMeteringArea(mCamera, mFramingRect);
-        mCameraConfig.setSceneMode(mCamera, isForOCR, mIsLightOn);
+       // mCameraConfig.setSceneMode(mCamera, isForOCR, mIsLightOn);
     }
 
     public synchronized Rect getFramingRect() {
         return mFramingRect;
-    }
-
-    public synchronized Rect getFramingRectInPreview() {
-        Rect rect = new Rect(getFramingRect());
-        Point cameraResolution = mCameraConfig.getCameraRes();
-        Point screenResolution = mCameraConfig.getScreenRes();
-        if (cameraResolution == null || screenResolution == null) {
-            return null;
-        }
-        rect.left = rect.left * cameraResolution.x / screenResolution.x;
-        rect.right = rect.right * cameraResolution.x / screenResolution.x;
-        rect.top = rect.top * cameraResolution.y / screenResolution.y;
-        rect.bottom = rect.bottom * cameraResolution.y / screenResolution.y;
-        return rect;
     }
 
     public void takePicture() {
@@ -129,10 +115,6 @@ public class CameraManager {
                 mCameraConfig.getScreenRes());
     }
 
-    public void saveErrorImage(Bitmap bm, String fileName) {
-        mImagePreProcessor.saveErrorImage(bm, fileName);
-    }
-
     public Camera getCamera(){
         return mCamera;
     }
@@ -143,5 +125,9 @@ public class CameraManager {
 
     public Point getScreenRes() {
         return mCameraConfig.getScreenRes();
+    }
+
+    public void saveErrorImage(Bitmap bm, String fileName) {
+        mImagePreProcessor.saveErrorImage(bm, fileName);
     }
 }

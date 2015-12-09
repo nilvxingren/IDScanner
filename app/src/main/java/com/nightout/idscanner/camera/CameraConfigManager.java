@@ -19,10 +19,8 @@ import java.util.List;
  * Created by behnamreyhani-masoleh on 15-10-23.
  */
 public class CameraConfigManager {
-    private static final int MIN_PREVIEW_PIXELS = 470 * 320; // normal screen
-    private static final int MAX_PREVIEW_PIXELS = 800 * 600; // more than large/HD screen
-    private static final float MAX_EXPOSURE_COMPENSATION = 1.5f;
-    private static final float MIN_EXPOSURE_COMPENSATION = 0.0f;
+    private static final int MIN_PREVIEW_PIXELS = 470 * 320;
+    private static final int MAX_PREVIEW_PIXELS = 800 * 600;
 
     private Context mContext;
     private Point mScreenRes;
@@ -72,38 +70,6 @@ public class CameraConfigManager {
         camera.setParameters(params);
     }
 
-    void setSceneMode(Camera camera, boolean isForOCR, boolean isLightOn) {
-        Camera.Parameters params = camera.getParameters();
-        String desiredSceneMode = null;
-
-        // STEADYPHOTO mode and others may turn off light, therefore don't set scene when light is on
-        if (isLightOn) {
-            desiredSceneMode = findSettableValue(params.getSupportedSceneModes(),
-                    Camera.Parameters.SCENE_MODE_AUTO);
-        } else {
-            if (isForOCR) {
-                desiredSceneMode = findSettableValue(params.getSupportedSceneModes(),
-                        Camera.Parameters.SCENE_MODE_STEADYPHOTO,
-                        Camera.Parameters.SCENE_MODE_BARCODE,
-                        Camera.Parameters.SCENE_MODE_AUTO,
-                        Camera.Parameters.SCENE_MODE_LANDSCAPE
-                );
-            } else {
-                desiredSceneMode = findSettableValue(params.getSupportedSceneModes(),
-                        Camera.Parameters.SCENE_MODE_BARCODE,
-                        Camera.Parameters.SCENE_MODE_STEADYPHOTO,
-                        Camera.Parameters.SCENE_MODE_AUTO,
-                        Camera.Parameters.SCENE_MODE_LANDSCAPE
-                );
-            }
-        }
-
-        if (desiredSceneMode != null) {
-            params.setSceneMode(desiredSceneMode);
-            camera.setParameters(params);
-        }
-    }
-
     void setFocusAndMeteringArea(Camera camera, Rect focusAreaRect) {
         Camera.Parameters params = camera.getParameters();
         List<Camera.Area> convertedCameraFocusArea = convertToCameraParamsFocusArea(focusAreaRect);
@@ -118,8 +84,6 @@ public class CameraConfigManager {
         }
         camera.setParameters(params);
     }
-
-
 
     boolean setCameraLightParams(Camera camera, boolean turnLightOn) {
         Camera.Parameters params = camera.getParameters();
@@ -137,30 +101,12 @@ public class CameraConfigManager {
         if (torch != null) {
 
             params.setFlashMode(torch);
-            // TODO: Might be better compensated outdoors
+            // TODO: Might be better compensated outdoors, need to test if accuracy is bad
             //setBestExposure(params, turnLightOn);
             camera.setParameters(params);
             return true;
         }
         return false;
-    }
-
-    void setBestExposure(Camera.Parameters parameters, boolean lightOn) {
-        int minExposure = parameters.getMinExposureCompensation();
-        int maxExposure = parameters.getMaxExposureCompensation();
-
-        float step = parameters.getExposureCompensationStep();
-        if ((minExposure != 0 || maxExposure != 0) && step > 0.0f) {
-            // Set low when light is on
-            float targetCompensation = lightOn ? MIN_EXPOSURE_COMPENSATION : MAX_EXPOSURE_COMPENSATION;
-            int compensationSteps = Math.round(targetCompensation / step);
-            // Clamp value:
-            compensationSteps = Math.max(Math.min(compensationSteps, maxExposure), minExposure);
-
-            if (parameters.getExposureCompensation() != compensationSteps) {
-                parameters.setExposureCompensation(compensationSteps);
-            }
-        }
     }
 
     private Point findBestPreviewSizeValue(Camera.Parameters parameters) {
@@ -256,5 +202,57 @@ public class CameraConfigManager {
         return mScreenRes;
     }
 
-    public Point getCameraRes() { return mCameraRes; }
+    public Point getCameraRes() {
+        return mCameraRes;
+    }
+
+     /* TODO: Fucks up camera quality, check how barcode mode is on a phone that supports it.
+     void setSceneMode(Camera camera, boolean isForOCR, boolean isLightOn) {
+        Camera.Parameters params = camera.getParameters();
+        String desiredSceneMode = null;
+
+        if (isLightOn) {
+            desiredSceneMode = findSettableValue(params.getSupportedSceneModes(),
+                    Camera.Parameters.SCENE_MODE_AUTO);
+        } else {
+            if (isForOCR) {
+                desiredSceneMode = findSettableValue(params.getSupportedSceneModes(),
+                        Camera.Parameters.SCENE_MODE_BARCODE,
+                        Camera.Parameters.SCENE_MODE_AUTO
+                );
+            } else {
+                desiredSceneMode = findSettableValue(params.getSupportedSceneModes(),
+                        Camera.Parameters.SCENE_MODE_BARCODE,
+                        Camera.Parameters.SCENE_MODE_AUTO,
+                        Camera.Parameters.SCENE_MODE_LANDSCAPE
+                );
+            }
+        }
+
+        if (desiredSceneMode != null) {
+           // params.setSceneMode(desiredSceneMode);
+            camera.setParameters(params);
+        }
+    }
+
+    private static final float MAX_EXPOSURE_COMPENSATION = 1.5f;
+    private static final float MIN_EXPOSURE_COMPENSATION = 0.0f;
+
+     void setBestExposure(Camera.Parameters parameters, boolean lightOn) {
+        int minExposure = parameters.getMinExposureCompensation();
+        int maxExposure = parameters.getMaxExposureCompensation();
+
+        float step = parameters.getExposureCompensationStep();
+        if ((minExposure != 0 || maxExposure != 0) && step > 0.0f) {
+            // Set low when light is on
+            float targetCompensation = lightOn ? MIN_EXPOSURE_COMPENSATION : MAX_EXPOSURE_COMPENSATION;
+            int compensationSteps = Math.round(targetCompensation / step);
+            // Clamp value:
+            compensationSteps = Math.max(Math.min(compensationSteps, maxExposure), minExposure);
+
+            if (parameters.getExposureCompensation() != compensationSteps) {
+                parameters.setExposureCompensation(compensationSteps);
+            }
+        }
+    }*/
 }

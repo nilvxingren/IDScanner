@@ -18,7 +18,6 @@ import com.nightout.idscanner.ScannerActivity;
 import com.nightout.idscanner.camera.CameraManager;
 
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +70,6 @@ public class PDF417DecodeAsyncTask extends AsyncTask<Void, Void, String> {
             e.printStackTrace();
             return ERROR_RESPONSE;
         }
-
         Log.d("Faggot","Results from barcode scanning:\n" + results);
         Log.d("Faggot", "Time taken for scanning in ms: " + (System.currentTimeMillis() - start));
         results += "\nTime taken for scanning in ms: " + (System.currentTimeMillis() - start);
