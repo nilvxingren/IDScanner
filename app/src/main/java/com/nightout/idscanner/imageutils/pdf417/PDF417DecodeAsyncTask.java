@@ -1,26 +1,18 @@
 package com.nightout.idscanner.imageutils.pdf417;
 
 import android.app.ProgressDialog;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.util.Log;
 
 import com.google.zxing.BinaryBitmap;
-import com.google.zxing.ChecksumException;
-import com.google.zxing.FormatException;
 import com.google.zxing.LuminanceSource;
-import com.google.zxing.NotFoundException;
 import com.google.zxing.RGBLuminanceSource;
 import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.pdf417.PDF417Reader;
-import com.googlecode.tesseract.android.TessBaseAPI;
-import com.nightout.idscanner.ErrorStats;
 import com.nightout.idscanner.ScannerActivity;
 import com.nightout.idscanner.camera.CameraManager;
-
-import java.util.List;
 
 /**
  * Created by behnamreyhani-masoleh on 15-11-02.
@@ -64,12 +56,9 @@ public class PDF417DecodeAsyncTask extends AsyncTask<Void, Void, String> {
                 results = result.getText();
             }
         } catch (Exception e) {
-            mManager.saveErrorImage(pdf417Barcode,
-                    ErrorStats.incrementExceptionCountAndGetFileName(e));
             e.printStackTrace();
             return ERROR_RESPONSE;
         }
-
         Log.d("Faggot","Results from barcode scanning:\n" + results);
         Log.d("Faggot", "Time taken for scanning in ms: " + (System.currentTimeMillis() - start));
         results += "\nTime taken for scanning in ms: " + (System.currentTimeMillis() - start);
