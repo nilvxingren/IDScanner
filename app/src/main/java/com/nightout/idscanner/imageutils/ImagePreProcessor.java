@@ -9,7 +9,7 @@ import android.graphics.Rect;
 import android.os.Environment;
 import android.util.Log;
 
-import com.nightout.idscanner.ErrorStats;
+import com.nightout.idscanner.TestStats;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
@@ -58,10 +58,6 @@ public class ImagePreProcessor {
             Bitmap tmp = bm;
 
             bm = cropForPDF417(blurredAdaptive, bm);
-
-            if (bm == null) {
-                saveErrorImage(tmp, ErrorStats.incrementExceptionCountAndGetFileName(new Exception()));
-            }
             //saveIntermediateInPipelineToFile(bm, "FinalBW");
         } catch (Exception e) {
             e.printStackTrace();
