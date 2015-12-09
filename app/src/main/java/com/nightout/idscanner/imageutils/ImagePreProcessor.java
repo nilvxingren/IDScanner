@@ -28,8 +28,6 @@ import java.util.List;
  */
 // Takes care of OCR image pre-processing using the opencv library
 public class ImagePreProcessor {
-
-
     private static final double IMAGE_SCALE_FACTOR = 0.50;
     public static final int WIDTH_BUFFER_RATIO = 14;
     public static final int HEIGHT_BUFFER_RATIO = 14;
@@ -53,7 +51,6 @@ public class ImagePreProcessor {
             Mat greyscaledMat = convertMatToGrayScale(bm);
 
             Mat blurredAdaptive = getBlurredBWUsingAdaptive(greyscaledMat);
-            Bitmap tmp = bm;
 
             bm = cropForPDF417(blurredAdaptive, bm);
 
@@ -376,5 +373,4 @@ public class ImagePreProcessor {
         }
         return subDir;
     }
-
 }
