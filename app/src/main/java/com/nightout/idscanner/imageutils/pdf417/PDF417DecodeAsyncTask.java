@@ -112,6 +112,7 @@ public class PDF417DecodeAsyncTask extends AsyncTask<Void, Void, String> {
                 Result result = mBarcodeReader.decode(bitmapToBinaryBitmap(pdf417Barcode), getDecoderParams(i));
                 if (result != null && result.getText() != null && !result.getText().equals("")) {
                     // Represents successful barcode decode
+                    Log.d("BenResults","Param type: " + i + "\n" + result.getText());
                     long decodeTime = System.currentTimeMillis() - decodeStart;
                     TestStats.increaseSuccessTime(i, decodeTime);
                     decodeTimes[i] = decodeTime;
@@ -127,7 +128,7 @@ public class PDF417DecodeAsyncTask extends AsyncTask<Void, Void, String> {
                 successful[i] = false;
             }
         }
-        return "";
+        return visualizeTests(successful, decodeTimes);
     }
 
     private Map<DecodeHintType,Object> getDecoderParams(int type) {
@@ -150,4 +151,33 @@ public class PDF417DecodeAsyncTask extends AsyncTask<Void, Void, String> {
         }
         return paramMap;
     }
+
+    private String visualizeTests(boolean [] successful, long [] decodeTimes) {
+        String results = "";
+        for (int i = 0; i<successful.length; i++) {
+
+            results+= (successful[i] ? "Success" : "Fail") + " - " + decodeTimes[i] + " ms - " +
+                    getTestTitle(i) + "\n";
+        }
+        return results;
+    }
+
+    private String getTestTitle(int paramType) {
+        String type = "No Params";
+        switch (paramType) {
+            case TestStats.NO_PARAMS:
+                break;
+            case TestStats.MONO_PARAMS:
+                type = "Pure Barcode";
+                break;
+            case TestStats.TRY_HARDER_PARAMS:
+                type = "Try Harder";
+                break;
+            case TestStats.MONO_TRY_HARDER_PARAMS:
+                type = "Pure Barcode & Try Harder";
+                break;
+        }
+        return type;
+    }
+
 }

@@ -47,7 +47,6 @@ public class ImagePreProcessor {
             //TODO: have to add anti-blurring/noise
             bm = getCroppedBitmapFromData(data, frame, screenRes);
 //            bm = getTestImage(false);
-            saveIntermediateInPipelineToFile(bm,"Test");
             Mat greyscaledMat = convertMatToGrayScale(bm);
 
             Mat blurredAdaptive = getBlurredBWUsingAdaptive(greyscaledMat);
@@ -342,6 +341,7 @@ public class ImagePreProcessor {
     }
 
     private void saveIntermediateInPipelineToFile(Bitmap intermediate, String fileName) {
+        Log.d("Faggot","Saving");
         saveBitmapToFile(intermediate, new File(getExternalAlbumStorageDir("nightout"), fileName + ".png"));
     }
 
