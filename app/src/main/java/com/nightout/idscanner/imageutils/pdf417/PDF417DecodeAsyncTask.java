@@ -17,6 +17,8 @@ import com.nightout.idscanner.TestStats;
 import com.nightout.idscanner.ScannerActivity;
 import com.nightout.idscanner.camera.CameraManager;
 
+import junit.framework.Test;
+
 import java.util.EnumMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -157,27 +159,9 @@ public class PDF417DecodeAsyncTask extends AsyncTask<Void, Void, String> {
         for (int i = 0; i<successful.length; i++) {
 
             results+= (successful[i] ? "Success" : "Fail") + " - " + decodeTimes[i] + " ms - " +
-                    getTestTitle(i) + "\n";
+                    TestStats.getTestTitle(i) + "\n";
         }
         return results;
-    }
-
-    private String getTestTitle(int paramType) {
-        String type = "No Params";
-        switch (paramType) {
-            case TestStats.NO_PARAMS:
-                break;
-            case TestStats.MONO_PARAMS:
-                type = "Pure Barcode";
-                break;
-            case TestStats.TRY_HARDER_PARAMS:
-                type = "Try Harder";
-                break;
-            case TestStats.MONO_TRY_HARDER_PARAMS:
-                type = "Pure Barcode & Try Harder";
-                break;
-        }
-        return type;
     }
 
 }
