@@ -99,25 +99,28 @@ public class PDF417DecodeAsyncTask extends AsyncTask<Void, Void, String> {
         long preProcessTime = System.currentTimeMillis() - start;
 
         if (pdf417Barcode == null) {
-            for (int i = 0; i < 4; i ++) {
+            for (int i = 0; i < 5; i ++) {
                 TestStats.increaseErrorTime(i, preProcessTime);
             }
             return ERROR_RESPONSE + preProcessTime;
         }
 
-        boolean [] successful = {true,true,true,true};
-        long [] decodeTimes = new long [4];
+        boolean [] successful = {true,true,true,true,true};
+        long [] decodeTimes = new long [5];
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 5; i++) {
             long decodeStart = System.currentTimeMillis();
             try {
-                Result result = mBarcodeReader.decode(bitmapToBinaryBitmap(pdf417Barcode), getDecoderParams(i));
+                BinaryBitmap bBmap = bitmapToBinaryBitmap(pdf417Barcode);
+                Result result = i<4 ?
+                        mBarcodeReader.decode(bBmap, getDecoderParams(i))
+                            : mBarcodeReader.decode(bBmap);
                 if (result != null && result.getText() != null && !result.getText().equals("")) {
                     // Represents successful barcode decode
-                    Log.d("BenResults","Param type: " + i + "\n" + result.getText());
                     long decodeTime = System.currentTimeMillis() - decodeStart;
-                    TestStats.increaseSuccessTime(i, decodeTime);
-                    decodeTimes[i] = decodeTime;
+                    Log.d("BenResults","Param type: " + i + "\n" + result.getText());
+                    TestStats.increaseSuccessTime(i, decodeTime+preProcessTime);
+                    decodeTimes[i] = decodeTime+preProcessTime;
                 } else {
                     // indicate that the barcode decode was not successful barcode decode
                     throw new Exception();
@@ -125,8 +128,8 @@ public class PDF417DecodeAsyncTask extends AsyncTask<Void, Void, String> {
             } catch (Exception e) {
                 // Represents unsuccessful barcode decode
                 long decodeFail = System.currentTimeMillis() - decodeStart;
-                TestStats.increaseErrorTime(i, decodeFail);
-                decodeTimes[i] = decodeFail;
+                TestStats.increaseErrorTime(i, decodeFail+preProcessTime);
+                decodeTimes[i] = decodeFail+preProcessTime;
                 successful[i] = false;
             }
         }

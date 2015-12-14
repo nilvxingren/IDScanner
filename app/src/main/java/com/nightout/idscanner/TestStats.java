@@ -19,9 +19,9 @@ public class TestStats extends BroadcastReceiver {
 
     private static int TOTAL_TRIALS;
 
-    private static int [] SUCCESSFUL_TRIAL_COUNT = new int [4];
-    private static long [] SUCCESS_TIME_TOTAL = new long [4];
-    private static long [] FAIL_TIME_TOTAL = new long [4];
+    private static int [] SUCCESSFUL_TRIAL_COUNT = new int [5];
+    private static long [] SUCCESS_TIME_TOTAL = new long [5];
+    private static long [] FAIL_TIME_TOTAL = new long [5];
 
     /*
     private static int [] CHECKSUM_ERROR_COUNT = new int [4];
@@ -34,6 +34,7 @@ public class TestStats extends BroadcastReceiver {
     public static final int MONO_PARAMS = 1;
     public static final int TRY_HARDER_PARAMS = 2;
     public static final int MONO_TRY_HARDER_PARAMS = 3;
+    public static final int JUST_DECODE = 4;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -109,6 +110,9 @@ public class TestStats extends BroadcastReceiver {
                 break;
             case TestStats.MONO_TRY_HARDER_PARAMS:
                 type = "Pure Barcode & Try Harder";
+                break;
+            case TestStats.JUST_DECODE:
+                type = "Zxing Decode";
                 break;
         }
         return type;
