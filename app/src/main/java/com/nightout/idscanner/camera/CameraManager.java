@@ -24,7 +24,7 @@ public class CameraManager {
 
     private Context mContext;
     private CameraConfigManager mCameraConfig;
-    private Camera mCamera;
+    static private Camera mCamera = null;
     private Camera.PictureCallback mCallback;
     private boolean mCameraIsInitialized;
     private Rect mFramingRect;
@@ -39,10 +39,19 @@ public class CameraManager {
     }
 
     public synchronized void initCamera(SurfaceHolder holder, boolean turnLightOn) throws IOException {
-        mCamera = Camera.open();
+        if (mCamera != null) {
+            return;
+        }
+
+        try {
+            mCamera = Camera.open();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
         if (mCamera == null) {
             throw new IOException();
         }
+
         mCamera.setPreviewDisplay(holder);
         if (!mCameraIsInitialized) {
             mCameraConfig.initFromCameraParams(mCamera);
@@ -55,6 +64,7 @@ public class CameraManager {
 
     public synchronized void deInitCamera() {
         if (mCamera != null) {
+            mCamera.stopPreview();
             mCamera.release();
             mCamera = null;
             mFramingRect = null;

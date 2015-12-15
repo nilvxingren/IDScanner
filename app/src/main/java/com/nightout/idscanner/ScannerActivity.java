@@ -140,18 +140,8 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
     @Override
     protected void onResume() {
         super.onResume();
-
         SurfaceHolder holder = ((SurfaceView)findViewById(R.id.surface_view)).getHolder();
-        if (mHasSurface) {
-            try {
-                startCamera(holder, mLightButton.isChecked());
-                mCameraManager.adjustFramingRect(mCardSideButton.isChecked());
-                mViewFinder.invalidate();
-                //mTessAPI.setRectangle();
-            } catch (Exception e) {
-                Log.e("Ben", "exception", e);
-            }
-        } else {
+        if (!mHasSurface) {
             holder.addCallback(this);
         }
     }
@@ -167,11 +157,6 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
     @Override
     protected void onPause() {
         mCameraManager.deInitCamera();
-        if (!mHasSurface) {
-            SurfaceHolder surfaceHolder = ((SurfaceView) findViewById(R.id.surface_view))
-                    .getHolder();
-            surfaceHolder.removeCallback(this);
-        }
         super.onPause();
 
     }
@@ -184,7 +169,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
                 mCameraManager.adjustFramingRect(mCardSideButton.isChecked());
                 mViewFinder.invalidate();
             } catch (Exception e) {
-                Log.e("Ben", "exception", e);
+                e.printStackTrace();
             }
         }
         mHasSurface = true;
@@ -196,14 +181,19 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-        mHasSurface = false;
+        if (mHasSurface) {
+            SurfaceHolder surfaceHolder = ((SurfaceView) findViewById(R.id.surface_view))
+                    .getHolder();
+            surfaceHolder.removeCallback(this);
+            mHasSurface = false;
+        }
     }
 
     private void startCamera(SurfaceHolder holder, boolean turnLightOn){
         try {
             mCameraManager.initCamera(holder, turnLightOn);
         } catch (Exception e) {
-            Log.e("Ben", "exception", e);
+            e.printStackTrace();
             showErrorMessage("Camera Hardware Error", "There was a problem with the camera hardware. Please re-start you're phone.");
         }
     }
