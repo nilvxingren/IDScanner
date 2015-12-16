@@ -8,9 +8,9 @@ import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.View;
 import android.view.WindowManager;
 import android.widget.CompoundButton;
 import android.widget.ToggleButton;
@@ -38,6 +38,8 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
     private boolean mHasSurface;
     private TessBaseAPI mTessAPI;
     private PDF417Reader mBarcodeReader;
+
+    private boolean mBarcodeScanning;
 
     static {
         if (!OpenCVLoader.initDebug()) {
@@ -84,6 +86,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
                 if (isForOCR()) {
                     new OCRDecodeAsyncTask(ScannerActivity.this, data, mCameraManager, mTessAPI).execute();
 		        } else {
+                    mBarcodeScanning = true;
                     new PDF417DecodeAsyncTask(ScannerActivity.this, data, mCameraManager, mBarcodeReader).execute();
                 }
             }
@@ -111,7 +114,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 try {
-                    if (mCameraManager.setLightMode(isChecked)){
+                    if (mCameraManager.setLightMode(isChecked)) {
                         mCameraManager.adjustFramingRect((
                                 ((ToggleButton) findViewById(R.id.toggleSide)).isChecked()));
                         mViewFinder.invalidate();
@@ -122,6 +125,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
             }
         });
 
+        /* Hardware volume up/down used for starting barcode decoding for now
         (findViewById(R.id.button_capture)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -135,6 +139,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
             }
             }
         });
+         */
     }
 
     @Override
@@ -152,6 +157,23 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
             mTessAPI.end();
         }
         super.onDestroy();
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+            if (mHasSurface && mCameraManager != null && mCameraManager.isPictureTakingReady()
+                    && !mBarcodeScanning) {
+                try {
+                    Log.d("Nigger", "Picture take recognized");
+                    mCameraManager.takePicture();
+                    return true;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return false;
     }
 
     @Override
@@ -316,6 +338,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
                         mCameraManager.restartCamera();
                     }
                 }).create().show();
+        mBarcodeScanning = false;
     }
 
     private boolean isForOCR() {

@@ -27,6 +27,7 @@ public class CameraManager {
     static private Camera mCamera = null;
     private Camera.PictureCallback mCallback;
     private boolean mCameraIsInitialized;
+    private boolean mIsPreviewing;
     private Rect mFramingRect;
     private ImagePreProcessor mImagePreProcessor;
     private boolean mIsLightOn;
@@ -60,11 +61,13 @@ public class CameraManager {
         mCameraConfig.setCameraDefaultParams(mCamera);
         setLightMode(turnLightOn);
         mCamera.startPreview();
+        mIsPreviewing = true;
     }
 
     public synchronized void deInitCamera() {
         if (mCamera != null) {
             mCamera.stopPreview();
+            mIsPreviewing = false;
             mCamera.release();
             mCamera = null;
             mFramingRect = null;
@@ -78,6 +81,10 @@ public class CameraManager {
             return true;
         }
         return false;
+    }
+
+    public boolean isPictureTakingReady() {
+        return mCamera != null && mIsPreviewing;
     }
 
     public synchronized void adjustFramingRect(boolean isForOCR) {

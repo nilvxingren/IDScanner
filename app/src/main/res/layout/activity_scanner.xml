@@ -14,7 +14,7 @@
         android:layout_height="match_parent"
         android:id="@+id/view_finder_view"
         android:background="#0000"/>
-
+<!--
         <Button
             android:id="@+id/button_capture"
             android:text="Capture"
@@ -22,7 +22,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal|top"
             />
-
+-->
         <ToggleButton
             android:layout_width="48dp"
             android:layout_height="40dp"
