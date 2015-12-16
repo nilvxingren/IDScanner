@@ -59,6 +59,6 @@ public class OCRDecodeAsyncTask extends AsyncTask<Void, Void, String> {
 
     protected void onPostExecute(String decodedString) {
         mDialog.dismiss();
-        mActivity.showResultAlertDialog(decodedString);
+        mActivity.showAlertDialog("Decoded Data:", decodedString);
     }
 }

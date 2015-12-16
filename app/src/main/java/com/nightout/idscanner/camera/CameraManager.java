@@ -25,17 +25,15 @@ public class CameraManager {
     private Context mContext;
     private CameraConfigManager mCameraConfig;
     static private Camera mCamera = null;
-    private Camera.PictureCallback mCallback;
     private boolean mCameraIsInitialized;
     private boolean mIsPreviewing;
     private Rect mFramingRect;
     private ImagePreProcessor mImagePreProcessor;
     private boolean mIsLightOn;
 
-    public CameraManager(Context context, Camera.PictureCallback callback) {
+    public CameraManager(Context context) {
         mContext = context;
         mCameraConfig = new CameraConfigManager(mContext);
-        mCallback = callback;
         mImagePreProcessor = new ImagePreProcessor(mContext);
     }
 
@@ -110,9 +108,9 @@ public class CameraManager {
         return mFramingRect;
     }
 
-    public void takePicture() {
+    public void takePicture(Camera.PictureCallback callback) {
         if (mCamera != null) {
-            mCamera.takePicture(null, null, mCallback);
+            mCamera.takePicture(null, null, callback);
         }
     }
 
@@ -146,5 +144,9 @@ public class CameraManager {
 
     public void saveErrorImage(Bitmap bm, String fileName) {
         mImagePreProcessor.saveErrorImage(bm, fileName);
+    }
+
+    public boolean isLightOn() {
+        return mIsLightOn;
     }
 }

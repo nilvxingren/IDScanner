@@ -44,20 +44,13 @@ public class ImagePreProcessor {
     public Bitmap preProcessImageForPDF417(byte [] data, Rect frame, Point screenRes) {
         Bitmap bm = null;
         try {
-            //TODO: have to add anti-blurring/noise
             bm = getCroppedBitmapFromData(data, frame, screenRes);
 //            bm = getTestImage(false);
-            saveIntermediateInPipelineToFile(bm,"Test");
             Mat greyscaledMat = convertMatToGrayScale(bm);
 
             Mat blurredAdaptive = getBlurredBWUsingAdaptive(greyscaledMat);
 
             bm = cropForPDF417(blurredAdaptive, bm);
-
-            if (bm == null) {
-                saveIntermediateInPipelineToFile(bm, "Error");
-            }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -105,7 +98,6 @@ public class ImagePreProcessor {
         Mat filtered = new Mat();
         //Imgproc.blur(grey, filtered, new Size(3, 3));
         Imgproc.Canny(grey, filtered, 100, 300);
-        saveIntermediateInPipelineToFile(filtered, "Canny");
         return blurImageForTextBoxRecognition(filtered);
     }
 
@@ -136,7 +128,6 @@ public class ImagePreProcessor {
         }
 
         if (pdfRect == null) {
-            Log.d("Faggot","No rectangles found for pdf");
             return null;
         }
 
