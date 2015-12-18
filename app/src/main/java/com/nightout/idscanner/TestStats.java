@@ -86,9 +86,10 @@ public class TestStats extends BroadcastReceiver {
             if (i!=3) {
                 name+="              ";
             }
+
             double accuracyPercentage = ((double) SUCCESSFUL_TRIAL_COUNT[i] / TOTAL_TRIALS)*100;
-            double avgSuccessTime = ((double)SUCCESS_TIME_TOTAL[i]/TOTAL_TRIALS);
-            double avgFailTime = ((double)FAIL_TIME_TOTAL[i]/TOTAL_TRIALS);
+            double avgSuccessTime = ((double)SUCCESS_TIME_TOTAL[i]/SUCCESSFUL_TRIAL_COUNT[i]);
+            double avgFailTime = ((double)FAIL_TIME_TOTAL[i]/(TOTAL_TRIALS - SUCCESSFUL_TRIAL_COUNT[i]);
 
             testResults+= name + "   |      " + SUCCESSFUL_TRIAL_COUNT[i] + "/" + TOTAL_TRIALS + ", "
                     + accuracyPercentage + "%      |       " + "        " + avgSuccessTime
@@ -140,5 +141,7 @@ public class TestStats extends BroadcastReceiver {
     public static void incrementRunCount(){
         TOTAL_TRIALS++;
     }
+
+    public static int getRunCount(){return TOTAL_TRIALS;}
 
 }

@@ -158,7 +158,7 @@ public class PDF417DecodeAsyncTask extends AsyncTask<Void, Void, String> {
     }
 
     private String visualizeTests(boolean [] successful, long [] decodeTimes) {
-        String results = "";
+        String results = "Number of tests: " + TestStats.getRunCount() + "\n";
         for (int i = 0; i<successful.length; i++) {
 
             results+= (successful[i] ? "Success" : "Fail") + " - " + decodeTimes[i] + " ms - " +
