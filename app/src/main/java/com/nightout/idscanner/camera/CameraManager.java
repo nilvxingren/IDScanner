@@ -1,16 +1,12 @@
 package com.nightout.idscanner.camera;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.hardware.Camera;
 import android.view.SurfaceHolder;
 
-import com.nightout.idscanner.imageutils.ImagePreProcessor;
-
 import java.io.IOException;
-import java.util.List;
 
 /**
  * Created by behnamreyhani-masoleh on 15-10-23.
@@ -22,23 +18,20 @@ public class CameraManager {
     public static final int OCR_FRAME_WIDTH = 325 * 3;
     public static final int OCR_FRAME_HEIGHT = 200 * 3;
 
-    private Context mContext;
     private CameraConfigManager mCameraConfig;
-    static private Camera mCamera = null;
-    private Camera.PictureCallback mCallback;
-    private boolean mCameraIsInitialized;
-    private Rect mFramingRect;
-    private ImagePreProcessor mImagePreProcessor;
-    private boolean mIsLightOn;
+    private static Camera mCamera = null;
 
-    public CameraManager(Context context, Camera.PictureCallback callback) {
-        mContext = context;
-        mCameraConfig = new CameraConfigManager(mContext);
-        mCallback = callback;
-        mImagePreProcessor = new ImagePreProcessor(mContext);
+    private boolean mIsLightOn;
+    private boolean mCameraIsInitialized;
+    private boolean mIsPreviewing;
+    private Rect mFramingRect;
+
+    public CameraManager() {
+        mCameraConfig = new CameraConfigManager();
     }
 
-    public synchronized void initCamera(SurfaceHolder holder, boolean turnLightOn) throws IOException {
+    public synchronized void initCamera(SurfaceHolder holder, boolean turnLightOn,
+                                        Context context) throws IOException {
         if (mCamera != null) {
             return;
         }
@@ -54,17 +47,19 @@ public class CameraManager {
 
         mCamera.setPreviewDisplay(holder);
         if (!mCameraIsInitialized) {
-            mCameraConfig.initFromCameraParams(mCamera);
+            mCameraConfig.initFromCameraParams(mCamera, context);
             mCameraIsInitialized = true;
         }
         mCameraConfig.setCameraDefaultParams(mCamera);
         setLightMode(turnLightOn);
         mCamera.startPreview();
+        mIsPreviewing = true;
     }
 
     public synchronized void deInitCamera() {
         if (mCamera != null) {
             mCamera.stopPreview();
+            mIsPreviewing = false;
             mCamera.release();
             mCamera = null;
             mFramingRect = null;
@@ -78,6 +73,10 @@ public class CameraManager {
             return true;
         }
         return false;
+    }
+
+    public boolean isPictureTakingReady() {
+        return mCamera != null && mIsPreviewing;
     }
 
     public synchronized void adjustFramingRect(boolean isForOCR) {
@@ -103,26 +102,17 @@ public class CameraManager {
         return mFramingRect;
     }
 
-    public void takePicture() {
+    public void takePicture(Camera.PictureCallback callback) {
         if (mCamera != null) {
-            mCamera.takePicture(null, null, mCallback);
+            mCamera.takePicture(null, null, callback);
         }
     }
 
     public void restartCamera(){
         if (mCamera != null) {
+            mIsPreviewing = true;
             mCamera.startPreview();
         }
-    }
-
-    public List<Bitmap> getEnhancedBitmap(byte [] data) {
-        return mImagePreProcessor.preProcessImageForOCR(data, mFramingRect,
-                mCameraConfig.getScreenRes());
-    }
-
-    public Bitmap getBarcodeRect(byte [] data) {
-        return mImagePreProcessor.preProcessImageForPDF417(data, mFramingRect,
-                mCameraConfig.getScreenRes());
     }
 
     public Camera getCamera(){
@@ -137,7 +127,7 @@ public class CameraManager {
         return mCameraConfig.getScreenRes();
     }
 
-    public void saveErrorImage(Bitmap bm, String fileName) {
-        mImagePreProcessor.saveErrorImage(bm, fileName);
+    public boolean isLightOn() {
+        return mIsLightOn;
     }
 }

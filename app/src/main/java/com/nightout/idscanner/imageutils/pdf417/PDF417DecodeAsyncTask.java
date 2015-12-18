@@ -1,9 +1,9 @@
 package com.nightout.idscanner.imageutils.pdf417;
 
-import android.app.ProgressDialog;
 import android.graphics.Bitmap;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.os.AsyncTask;
-import android.util.Log;
 
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.LuminanceSource;
@@ -11,63 +11,50 @@ import com.google.zxing.RGBLuminanceSource;
 import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.pdf417.PDF417Reader;
-import com.nightout.idscanner.ScannerActivity;
-import com.nightout.idscanner.camera.CameraManager;
+import com.nightout.idscanner.imageutils.ImagePreProcessor;
 
 /**
  * Created by behnamreyhani-masoleh on 15-11-02.
  */
-// Takes care of PDF417 decode using the xzing library
-public class PDF417DecodeAsyncTask extends AsyncTask<Void, Void, String> {
-    private ScannerActivity mActivity;
+// Takes care of PDF417 decode using the zxing library
+public class PDF417DecodeAsyncTask extends AsyncTask<Void, Void, Boolean> {
+    private PDF417Helper mHelper;
     private byte[] mData;
-    private CameraManager mManager;
-    private ProgressDialog mDialog;
-    private PDF417Reader mBarcodeReader;
+    private Point mScreenRes;
+    private Rect mFramingRect;
+    private String mResponse;
 
-    // TODO: need to change error handling, just for simplification during testing phase purposes
-    private static final String ERROR_RESPONSE = "ERROR";
-
-    public PDF417DecodeAsyncTask(ScannerActivity activity, byte[] data, CameraManager manager, PDF417Reader scanner ) {
-        mActivity = activity;
+    public PDF417DecodeAsyncTask(byte[] data, PDF417Helper helper, Point screenRes,
+                                 Rect framingRect) {
         mData = data;
-        mManager = manager;
-        mBarcodeReader = scanner;
+        mHelper = helper;
+        mScreenRes = screenRes;
+        mFramingRect = framingRect;
     }
 
     @Override
-    protected void onPreExecute() {
-        mDialog = mActivity.showProgressDialog("Scanning ID...");
-    }
-
-    @Override
-    protected String doInBackground(Void... values) {
-        long start = System.currentTimeMillis();
-        String results = "";
-        Bitmap pdf417Barcode = mManager.getBarcodeRect(mData);
+    protected Boolean doInBackground(Void... values) {
+        Bitmap pdf417Barcode = ImagePreProcessor.preProcessImageForPDF417(mData, mFramingRect, mScreenRes);
 
         if (pdf417Barcode == null) {
-            return ERROR_RESPONSE;
+            return Boolean.FALSE;
         }
 
         try {
-            Result result = mBarcodeReader.decode(bitmapToBinaryBitmap(pdf417Barcode));
+            Result result = (new PDF417Reader()).decode(bitmapToBinaryBitmap(pdf417Barcode));
             if (result.getText() != null) {
-                results = result.getText();
+                mResponse = result.getText();
+                return Boolean.TRUE;
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return ERROR_RESPONSE;
+            return Boolean.FALSE;
         }
-        Log.d("Faggot","Results from barcode scanning:\n" + results);
-        Log.d("Faggot", "Time taken for scanning in ms: " + (System.currentTimeMillis() - start));
-        results += "\nTime taken for scanning in ms: " + (System.currentTimeMillis() - start);
-        return results;
+        return Boolean.FALSE;
     }
 
-    protected void onPostExecute(String decodedString) {
-        mDialog.dismiss();
-        mActivity.showResultAlertDialog(decodedString);
+    protected void onPostExecute(Boolean successful) {
+        mHelper.reportResult(successful, successful ? mResponse : null);
     }
 
     private BinaryBitmap bitmapToBinaryBitmap(Bitmap pdf417Bitmap) {

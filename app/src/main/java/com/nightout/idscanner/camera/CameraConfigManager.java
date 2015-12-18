@@ -22,17 +22,12 @@ public class CameraConfigManager {
     private static final int MIN_PREVIEW_PIXELS = 470 * 320;
     private static final int MAX_PREVIEW_PIXELS = 800 * 600;
 
-    private Context mContext;
     private Point mScreenRes;
     private Point mCameraRes;
 
-    public CameraConfigManager(Context context) {
-        mContext = context;
-    }
-
-    void initFromCameraParams(Camera camera) {
+    void initFromCameraParams(Camera camera, Context context) {
         Camera.Parameters params = camera.getParameters();
-        WindowManager windowManager = (WindowManager) mContext
+        WindowManager windowManager = (WindowManager) context
                 .getSystemService(Context.WINDOW_SERVICE);
         Display display = windowManager.getDefaultDisplay();
         int width = display.getWidth();
@@ -109,65 +104,6 @@ public class CameraConfigManager {
         return false;
     }
 
-    private Point findBestPreviewSizeValue(Camera.Parameters parameters) {
-
-        // Sort by size, descending
-        List<Camera.Size> supportedPreviewSizes = new ArrayList<Camera.Size>(parameters.getSupportedPreviewSizes());
-        Collections.sort(supportedPreviewSizes, new Comparator<Camera.Size>() {
-            @Override
-            public int compare(Camera.Size a, Camera.Size b) {
-                int aPixels = a.height * a.width;
-                int bPixels = b.height * b.width;
-                if (bPixels < aPixels) {
-                    return -1;
-                }
-                if (bPixels > aPixels) {
-                    return 1;
-                }
-                return 0;
-            }
-        });
-
-            StringBuilder previewSizesString = new StringBuilder();
-            for (Camera.Size supportedPreviewSize : supportedPreviewSizes) {
-                previewSizesString.append(supportedPreviewSize.width).append('x')
-                        .append(supportedPreviewSize.height).append(' ');
-            }
-
-        Point bestSize = null;
-        float screenAspectRatio = (float) mScreenRes.x / (float) mScreenRes.y;
-
-        float diff = Float.POSITIVE_INFINITY;
-        for (Camera.Size supportedPreviewSize : supportedPreviewSizes) {
-            int realWidth = supportedPreviewSize.width;
-            int realHeight = supportedPreviewSize.height;
-            int pixels = realWidth * realHeight;
-            if (pixels < MIN_PREVIEW_PIXELS || pixels > MAX_PREVIEW_PIXELS) {
-                continue;
-            }
-            boolean isCandidatePortrait = realWidth < realHeight;
-            int maybeFlippedWidth = isCandidatePortrait ? realHeight : realWidth;
-            int maybeFlippedHeight = isCandidatePortrait ? realWidth : realHeight;
-            if (maybeFlippedWidth == mScreenRes.x && maybeFlippedHeight == mScreenRes.y) {
-                Point exactPoint = new Point(realWidth, realHeight);
-                return exactPoint;
-            }
-            float aspectRatio = (float) maybeFlippedWidth / (float) maybeFlippedHeight;
-            float newDiff = Math.abs(aspectRatio - screenAspectRatio);
-            if (newDiff < diff) {
-                bestSize = new Point(realWidth, realHeight);
-                diff = newDiff;
-            }
-        }
-
-        if (bestSize == null) {
-            Camera.Size defaultSize = parameters.getPreviewSize();
-            bestSize = new Point(defaultSize.width, defaultSize.height);
-        }
-
-        return bestSize;
-    }
-
     private static String findSettableValue(Collection<String> supportedValues,
                                             String... desiredValues) {
         String result = null;
@@ -204,6 +140,64 @@ public class CameraConfigManager {
 
     public Point getCameraRes() {
         return mCameraRes;
+    }
+
+    private Point findBestPreviewSizeValue(Camera.Parameters parameters) {
+        // Sort by size, descending
+        List<Camera.Size> supportedPreviewSizes = new ArrayList<Camera.Size>(parameters.getSupportedPreviewSizes());
+        Collections.sort(supportedPreviewSizes, new Comparator<Camera.Size>() {
+            @Override
+            public int compare(Camera.Size a, Camera.Size b) {
+                int aPixels = a.height * a.width;
+                int bPixels = b.height * b.width;
+                if (bPixels < aPixels) {
+                    return -1;
+                }
+                if (bPixels > aPixels) {
+                    return 1;
+                }
+                return 0;
+            }
+        });
+
+        StringBuilder previewSizesString = new StringBuilder();
+        for (Camera.Size supportedPreviewSize : supportedPreviewSizes) {
+            previewSizesString.append(supportedPreviewSize.width).append('x')
+                    .append(supportedPreviewSize.height).append(' ');
+        }
+
+        Point bestSize = null;
+        float screenAspectRatio = (float) mScreenRes.x / (float) mScreenRes.y;
+
+        float diff = Float.POSITIVE_INFINITY;
+        for (Camera.Size supportedPreviewSize : supportedPreviewSizes) {
+            int realWidth = supportedPreviewSize.width;
+            int realHeight = supportedPreviewSize.height;
+            int pixels = realWidth * realHeight;
+            if (pixels < MIN_PREVIEW_PIXELS || pixels > MAX_PREVIEW_PIXELS) {
+                continue;
+            }
+            boolean isCandidatePortrait = realWidth < realHeight;
+            int maybeFlippedWidth = isCandidatePortrait ? realHeight : realWidth;
+            int maybeFlippedHeight = isCandidatePortrait ? realWidth : realHeight;
+            if (maybeFlippedWidth == mScreenRes.x && maybeFlippedHeight == mScreenRes.y) {
+                Point exactPoint = new Point(realWidth, realHeight);
+                return exactPoint;
+            }
+            float aspectRatio = (float) maybeFlippedWidth / (float) maybeFlippedHeight;
+            float newDiff = Math.abs(aspectRatio - screenAspectRatio);
+            if (newDiff < diff) {
+                bestSize = new Point(realWidth, realHeight);
+                diff = newDiff;
+            }
+        }
+
+        if (bestSize == null) {
+            Camera.Size defaultSize = parameters.getPreviewSize();
+            bestSize = new Point(defaultSize.width, defaultSize.height);
+        }
+
+        return bestSize;
     }
 
      /* TODO: Fucks up camera quality, check how barcode mode is on a phone that supports it.
