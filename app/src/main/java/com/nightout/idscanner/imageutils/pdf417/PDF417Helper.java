@@ -3,7 +3,6 @@ import android.hardware.Camera;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
-import android.util.Log;
 
 import com.nightout.idscanner.ScannerActivity;
 import com.nightout.idscanner.camera.CameraManager;
@@ -11,7 +10,7 @@ import com.nightout.idscanner.camera.CameraManager;
 /**
  * Created by behnamreyhani-masoleh on 15-12-15.
  */
-public class PDF417AsyncTaskHelper {
+public class PDF417Helper {
     private static final int INITIAL_PICTURE_TAKE_DELAY = 50;
     private static final int PICTURE_TAKING_INTERVAL = 25;
     private static final int MAX_THREAD_COUNT = 4;
@@ -31,15 +30,15 @@ public class PDF417AsyncTaskHelper {
         public void onPictureTaken(byte[] data, Camera camera) {
             mCameraManager.restartCamera();
             mStartedThreadCount++;
-            startAsyncTaskInParallel(new PDF417DecodeAsyncTask(data, mCameraManager,
-                    PDF417AsyncTaskHelper.this));
+            startAsyncTaskInParallel(new PDF417DecodeAsyncTask(data, PDF417Helper.this,
+                    mCameraManager.getScreenRes(), mCameraManager.getFramingRect()));
             if (mStartedThreadCount < MAX_THREAD_COUNT) {
-                takePictureWithDelay(PICTURE_TAKING_INTERVAL);
+               takePictureWithDelay(PICTURE_TAKING_INTERVAL);
             }
         }
     };
 
-    public PDF417AsyncTaskHelper(ScannerActivity activity) {
+    public PDF417Helper(ScannerActivity activity) {
         mScannerActivity = activity;
         mCameraManager = mScannerActivity.getCameraManager();
     }

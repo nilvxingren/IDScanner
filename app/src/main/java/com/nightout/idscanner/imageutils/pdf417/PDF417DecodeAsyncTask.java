@@ -1,8 +1,9 @@
 package com.nightout.idscanner.imageutils.pdf417;
 
 import android.graphics.Bitmap;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.os.AsyncTask;
-import android.util.Log;
 
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.LuminanceSource;
@@ -10,28 +11,30 @@ import com.google.zxing.RGBLuminanceSource;
 import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.pdf417.PDF417Reader;
-import com.nightout.idscanner.camera.CameraManager;
+import com.nightout.idscanner.imageutils.ImagePreProcessor;
 
 /**
  * Created by behnamreyhani-masoleh on 15-11-02.
  */
-// Takes care of PDF417 decode using the xzing library
+// Takes care of PDF417 decode using the zxing library
 public class PDF417DecodeAsyncTask extends AsyncTask<Void, Void, Boolean> {
-    private PDF417AsyncTaskHelper mHelper;
+    private PDF417Helper mHelper;
     private byte[] mData;
-    private CameraManager mManager;
-
+    private Point mScreenRes;
+    private Rect mFramingRect;
     private String mResponse;
 
-    public PDF417DecodeAsyncTask(byte[] data, CameraManager manager, PDF417AsyncTaskHelper helper) {
+    public PDF417DecodeAsyncTask(byte[] data, PDF417Helper helper, Point screenRes,
+                                 Rect framingRect) {
         mData = data;
-        mManager = manager;
         mHelper = helper;
+        mScreenRes = screenRes;
+        mFramingRect = framingRect;
     }
 
     @Override
     protected Boolean doInBackground(Void... values) {
-        Bitmap pdf417Barcode = mManager.getBarcodeRect(mData);
+        Bitmap pdf417Barcode = ImagePreProcessor.preProcessImageForPDF417(mData, mFramingRect, mScreenRes);
 
         if (pdf417Barcode == null) {
             return Boolean.FALSE;

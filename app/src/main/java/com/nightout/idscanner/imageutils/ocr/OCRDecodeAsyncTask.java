@@ -8,6 +8,7 @@ import com.googlecode.tesseract.android.TessBaseAPI;
 
 import com.nightout.idscanner.ScannerActivity;
 import com.nightout.idscanner.camera.CameraManager;
+import com.nightout.idscanner.imageutils.ImagePreProcessor;
 
 import java.util.List;
 
@@ -38,7 +39,8 @@ public class OCRDecodeAsyncTask extends AsyncTask<Void, Void, String> {
     protected String doInBackground(Void... values) {
         long start = System.currentTimeMillis();
         String results;
-        List<Bitmap> bitmapList = mManager.getEnhancedBitmap(mData);
+        List<Bitmap> bitmapList = ImagePreProcessor.preProcessImageForOCR(mData, mManager.getFramingRect(),
+                mManager.getScreenRes());
         if (bitmapList == null || bitmapList.size() < 4) {
             return null;
         }

@@ -1,13 +1,12 @@
 package com.nightout.idscanner.imageutils;
 
-import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.BitmapRegionDecoder;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.os.Environment;
 import android.util.Log;
+
+import com.nightout.idscanner.FileManager;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
@@ -18,34 +17,27 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by behnamreyhani-masoleh on 15-10-18.
  */
-// Takes care of OCR image pre-processing using the opencv library
+// Takes care of image pre-processing using the opencv library
 public class ImagePreProcessor {
-    private static final double IMAGE_SCALE_FACTOR = 0.50;
+    //private static final double IMAGE_SCALE_FACTOR = 0.50;
+
     public static final int WIDTH_BUFFER_RATIO = 14;
     public static final int HEIGHT_BUFFER_RATIO = 14;
     private static final int TEXT_BOX_CROP_PIXEL_BUFFER = 20;
     private static final double WHITE_PIXEL_THRESHOLD = 0.15;
     private static final double WHITE_PIXEL_THRESHOLD_TWO = 0.15;
 
-    private Context mContext;
-
-    public ImagePreProcessor(Context context) {
-        mContext = context;
-    }
-
-    public Bitmap preProcessImageForPDF417(byte [] data, Rect frame, Point screenRes) {
+    public static Bitmap preProcessImageForPDF417(byte [] data, Rect frame, Point screenRes) {
         Bitmap bm = null;
         try {
             bm = getCroppedBitmapFromData(data, frame, screenRes);
-//            bm = getTestImage(false);
+
             Mat greyscaledMat = convertMatToGrayScale(bm);
 
             Mat blurredAdaptive = getBlurredBWUsingAdaptive(greyscaledMat);
@@ -58,7 +50,7 @@ public class ImagePreProcessor {
     }
 
 
-    public List<Bitmap> preProcessImageForOCR(byte [] data, Rect frame, Point screenRes) {
+    public static List<Bitmap> preProcessImageForOCR(byte [] data, Rect frame, Point screenRes) {
         Bitmap bm;
         List<Bitmap> textBoxList = null;
         try {
@@ -80,28 +72,21 @@ public class ImagePreProcessor {
         return textBoxList;
     }
 
-    private boolean isTextRect(org.opencv.core.Rect rect, Mat org) {
+    private static boolean isTextRect(org.opencv.core.Rect rect, Mat org) {
         return (rect.width > rect.height) && rect.height > 10 && rect.width > 50
                 && rect.height < org.height()/1.5 && rect.width < org.width()/1.5;
     }
 
-    private boolean canBePDF417Rect(org.opencv.core.Rect rect, Mat org) {
+    private static boolean canBePDF417Rect(org.opencv.core.Rect rect, Mat org) {
         return (rect.width > 3*rect.height) && (rect.width >= 0.6*org.width());
     }
 
-    private Mat getBlurredBWUsingAdaptive(Mat grey) {
+    private static Mat getBlurredBWUsingAdaptive(Mat grey) {
         Mat bw = convertToBinaryAdaptiveThreshold(grey, 13, 10, false);
         return blurImageForTextBoxRecognition(bw);
     }
 
-    private Mat getBlurredBWUsingCannyEdge(Mat grey) {
-        Mat filtered = new Mat();
-        //Imgproc.blur(grey, filtered, new Size(3, 3));
-        Imgproc.Canny(grey, filtered, 100, 300);
-        return blurImageForTextBoxRecognition(filtered);
-    }
-
-    private Bitmap cropForPDF417(Mat blurredMat, Bitmap bm) {
+    private static Bitmap cropForPDF417(Mat blurredMat, Bitmap bm) {
         Mat org = new Mat();
         Utils.bitmapToMat(bm, org);
 
@@ -134,7 +119,7 @@ public class ImagePreProcessor {
         return getBitmapFromOpenCVRect(org, pdfRect);
     }
 
-    private Bitmap getBitmapFromOpenCVRect(Mat org, org.opencv.core.Rect rect) {
+    private static Bitmap getBitmapFromOpenCVRect(Mat org, org.opencv.core.Rect rect) {
         Mat buffered = addBufferToTextBoxMat(org, rect);
         Bitmap outBM = Bitmap.createBitmap(buffered.cols(), buffered.rows(),
                 Bitmap.Config.ARGB_8888);
@@ -142,7 +127,7 @@ public class ImagePreProcessor {
         return outBM;
     }
 
-    private List<Bitmap> findTextBoxes(Mat blurredMat, Mat org) {
+    private static List<Bitmap> findTextBoxes(Mat blurredMat, Mat org) {
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
         Imgproc.findContours(blurredMat, contours, hierarchy, Imgproc.RETR_CCOMP,
@@ -172,7 +157,7 @@ public class ImagePreProcessor {
                         Mat bufferedMat = addBufferToTextBoxMat(org, rect);
 
                         // TODO: see which order is faster
-                        saveIntermediateInPipelineToFile(bufferedMat, "TextBox-" + idx);
+                        FileManager.savePicToExternalDirectory(bufferedMat, "TextBox-" + idx);
                         //  rescaleMat(bufferedMat, IMAGE_SCALE_FACTOR);
                         Imgproc.rectangle(tmp, rect.br(), rect.tl(), new Scalar(0, 0, 0), 10);
 
@@ -185,14 +170,14 @@ public class ImagePreProcessor {
                 }
             }
         }
-        saveIntermediateInPipelineToFile(tmp, "Boxed");
+        FileManager.savePicToExternalDirectory(tmp, "Boxed");
         Log.d("Faggot", "The number of text boxes detected: " + count);
         Log.d("Faggot", "The number of boxes detected: " + countH);
 
         return textBoxes;
     }
 
-    private Mat addBufferToTextBoxMat(Mat org, org.opencv.core.Rect rect) {
+    private static Mat addBufferToTextBoxMat(Mat org, org.opencv.core.Rect rect) {
         Mat shallowCopy = new Mat();
         org.copyTo(shallowCopy);
 
@@ -208,7 +193,7 @@ public class ImagePreProcessor {
         }
     }
 
-    private Mat blurImageForTextBoxRecognition(Mat mat) {
+    private static Mat blurImageForTextBoxRecognition(Mat mat) {
         Mat blurred = new Mat();
         mat.copyTo(blurred);
 
@@ -225,38 +210,7 @@ public class ImagePreProcessor {
         return blurred;
     }
 
-    private Bitmap getTestImage(boolean isForOCR) {
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-        File photoPath = new File(getExternalAlbumStorageDir("nightout"), isForOCR ? "Test.png" : "PDFTest.png");
-        Bitmap bitmap = BitmapFactory.decodeFile(photoPath.getPath(), options);
-        return bitmap;
-    }
-
-    private double calculateSkewAngle(Mat bw) {
-        Mat lines = new Mat();
-        double angle = 0;
-        Imgproc.HoughLinesP(bw, lines, 1, Math.PI / 180, 100, bw.width() / 2.5, 60);
-        if (!lines.empty()) {
-            for (int i = 0; i < lines.rows(); i++) {
-                double [] linePoints = lines.get(i,0);
-                angle += Math.atan2(linePoints[3] - linePoints[1], linePoints[2] - linePoints[0]);
-            }
-        }
-        return angle/lines.rows();
-    }
-
-    private void testBWGaussianParams(final Mat org, boolean blackOnWhite) {
-        for (int mean = 34; mean<=44; mean+=2) {
-            for (int blockSize = 151; blockSize <= 171; blockSize += 2) {
-                Mat blackAndWhiteMat = convertToBinaryAdaptiveThreshold(org, blockSize, mean, blackOnWhite);
-                saveIntermediateInPipelineToFile(blackAndWhiteMat, "bw-" + blockSize + ":" + mean);
-            }
-        }
-    }
-
-
-    private Mat convertMatToGrayScale(Bitmap org) {
+    private static Mat convertMatToGrayScale(Bitmap org) {
         Mat grayScaled = new Mat();
         Mat orgMat = new Mat();
         Utils.bitmapToMat(org, orgMat);
@@ -264,36 +218,14 @@ public class ImagePreProcessor {
         return grayScaled;
     }
 
-    private Mat rescaleMat(Mat org, double scaleFactor) {
-        Mat outMat = new Mat();
-        Imgproc.resize(org, outMat, new Size(), scaleFactor, scaleFactor, Imgproc.INTER_LINEAR);
-        return outMat;
-    }
-
-    private Bitmap rescaleBitmap(Bitmap org, double scaleFactor) {
-        long start = System.currentTimeMillis();
-        Mat mat = new Mat(org.getWidth(), org.getHeight(), CvType.CV_8UC1);
-        Utils.bitmapToMat(org, mat);
-        Log.d("Benji", "Time for bitmap to Mat conversion in ms: " + (System.currentTimeMillis() - start));
-        Mat outMat = new Mat();
-        start = System.currentTimeMillis();
-        Imgproc.resize(mat, outMat, new Size(), scaleFactor, scaleFactor, Imgproc.INTER_LINEAR);
-        Log.d("Benji", "Time for opencv rescale in ms: " + (System.currentTimeMillis() - start));
-        start = System.currentTimeMillis();
-        Bitmap outBM = Bitmap.createBitmap(outMat.cols(), outMat.rows(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(outMat, outBM);
-        Log.d("Benji", "Time for mat to bitmap conversion in ms: " + (System.currentTimeMillis() - start));
-        return outBM;
-    }
-
-    private Mat convertToBinaryAdaptiveThreshold(Mat greyscaledMat, int blockSize, int i, boolean isBlackOnWhite) {
+    private static Mat convertToBinaryAdaptiveThreshold(Mat greyscaledMat, int blockSize, int i, boolean isBlackOnWhite) {
         Mat binaryMat = new Mat();
         Imgproc.adaptiveThreshold(greyscaledMat, binaryMat, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
                 isBlackOnWhite ? Imgproc.THRESH_BINARY : Imgproc.THRESH_BINARY_INV, blockSize, i);
         return binaryMat;
     }
 
-    private Bitmap getCroppedBitmapFromData(byte [] data, Rect frame, Point screenRes) throws Exception {
+    private static Bitmap getCroppedBitmapFromData(byte [] data, Rect frame, Point screenRes) throws Exception {
         BitmapRegionDecoder decoder = BitmapRegionDecoder.newInstance(data, 0, data.length, false);
         int height = decoder.getHeight();
         int width = decoder.getWidth();
@@ -310,50 +242,14 @@ public class ImagePreProcessor {
                 right.intValue(), bottom.intValue()), null);
     }
 
-    private File getExternalAlbumStorageDir(String albumName) {
-        // Get the directory for the user's public pictures directory.
-        File file = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES), albumName);
-        file.mkdirs();
-        return file;
-    }
+    /* Functions that are not being used right now but may be later for pre-processing/testing:
 
-    private void saveBitmapToFile(Bitmap bitmap, File destFile) {
-        FileOutputStream out = null;
-        try {
-            out = new FileOutputStream(destFile);
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
-            // PNG is a lossless format, the compression factor (100) is ignored
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (out != null) {
-                    out.close();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private void saveIntermediateInPipelineToFile(Bitmap intermediate, String fileName) {
-        saveBitmapToFile(intermediate, new File(getExternalAlbumStorageDir("nightout"), fileName + ".png"));
-    }
-
-    private void saveIntermediateInPipelineToFile(Mat intermediate, String fileName) {
-        Bitmap outBM = Bitmap.createBitmap(intermediate.cols(), intermediate.rows(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(intermediate, outBM);
-        saveIntermediateInPipelineToFile(outBM, fileName);
-
-    }
-
-    public void saveErrorImage(Bitmap scannedBarcode, String fileName) {
+    public static void saveErrorImage(Bitmap scannedBarcode, String fileName) {
         saveBitmapToFile(scannedBarcode, new File(getExternalAlbumStorageDir("nightout/Error/"
                 + getCorrectDirectoryFromFileName(fileName)), fileName + ".png"));
     }
 
-    private String getCorrectDirectoryFromFileName(String fileName) {
+    private static String getCorrectDirectoryFromFileName(String fileName) {
         String subDir = "Normal";
         if (fileName.contains("CheckSum")) {
             subDir = "CheckSum";
@@ -364,4 +260,64 @@ public class ImagePreProcessor {
         }
         return subDir;
     }
+
+    private static Mat getBlurredBWUsingCannyEdge(Mat grey) {
+        Mat filtered = new Mat();
+        //Imgproc.blur(grey, filtered, new Size(3, 3));
+        Imgproc.Canny(grey, filtered, 100, 300);
+        return blurImageForTextBoxRecognition(filtered);
+    }
+
+      private static Bitmap getTestImage(boolean isForOCR) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+        File photoPath = new File(getExternalAlbumStorageDir("nightout"), isForOCR ? "Test.png" : "PDFTest.png");
+        Bitmap bitmap = BitmapFactory.decodeFile(photoPath.getPath(), options);
+        return bitmap;
+    }
+
+    private static double calculateSkewAngle(Mat bw) {
+        Mat lines = new Mat();
+        double angle = 0;
+        Imgproc.HoughLinesP(bw, lines, 1, Math.PI / 180, 100, bw.width() / 2.5, 60);
+        if (!lines.empty()) {
+            for (int i = 0; i < lines.rows(); i++) {
+                double [] linePoints = lines.get(i,0);
+                angle += Math.atan2(linePoints[3] - linePoints[1], linePoints[2] - linePoints[0]);
+            }
+        }
+        return angle/lines.rows();
+    }
+
+    private static void testBWGaussianParams(final Mat org, boolean blackOnWhite) {
+        for (int mean = 34; mean<=44; mean+=2) {
+            for (int blockSize = 151; blockSize <= 171; blockSize += 2) {
+                Mat blackAndWhiteMat = convertToBinaryAdaptiveThreshold(org, blockSize, mean, blackOnWhite);
+                saveIntermediateInPipelineToFile(blackAndWhiteMat, "bw-" + blockSize + ":" + mean);
+            }
+        }
+    }
+
+    private static Mat rescaleMat(Mat org, double scaleFactor) {
+        Mat outMat = new Mat();
+        Imgproc.resize(org, outMat, new Size(), scaleFactor, scaleFactor, Imgproc.INTER_LINEAR);
+        return outMat;
+    }
+
+    private static Bitmap rescaleBitmap(Bitmap org, double scaleFactor) {
+        long start = System.currentTimeMillis();
+        Mat mat = new Mat(org.getWidth(), org.getHeight(), CvType.CV_8UC1);
+        Utils.bitmapToMat(org, mat);
+        Log.d("Benji", "Time for bitmap to Mat conversion in ms: " + (System.currentTimeMillis() - start));
+        Mat outMat = new Mat();
+        start = System.currentTimeMillis();
+        Imgproc.resize(mat, outMat, new Size(), scaleFactor, scaleFactor, Imgproc.INTER_LINEAR);
+        Log.d("Benji", "Time for opencv rescale in ms: " + (System.currentTimeMillis() - start));
+        start = System.currentTimeMillis();
+        Bitmap outBM = Bitmap.createBitmap(outMat.cols(), outMat.rows(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(outMat, outBM);
+        Log.d("Benji", "Time for mat to bitmap conversion in ms: " + (System.currentTimeMillis() - start));
+        return outBM;
+    }
+     */
 }
