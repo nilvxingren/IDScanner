@@ -1,9 +1,126 @@
 package com.nightout.idscanner.imageutils.pdf417;
 
 import android.os.AsyncTask;
+import android.util.Log;
+
+import com.nightout.idscanner.imageutils.IDDictionary;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * Created by benreyhani on 15-12-20.
  */
-public class PDF417DataHandler extends AsyncTask {
+public class PDF417DataHandler extends AsyncTask<String, Boolean, Boolean> {
+    private JSONObject mJSONObject;
+
+    @Override
+    protected Boolean doInBackground(String ... decodedResult) {
+        Map<String, ArrayList<String>> dictionary =
+                new LinkedHashMap<>(IDDictionary.getBarcodeIdDictionary());
+
+        mJSONObject  = new JSONObject();
+
+        String [] values = decodedResult[0].split("\\r?\\n");
+
+        for (String value : values) {
+            //Denotes that all the required attributes have been set to JSON object
+            if (isAllDataObtained()) {
+                break;
+            }
+            // Assuming that all IDs being scanned have 3 letter trigger at the beginning like ON driver license
+            if (value.length() > 3) {
+                for (Map.Entry<String, ArrayList<String>> entry : dictionary.entrySet()) {
+                    String key = entry.getKey();
+                    for (String trigger : dictionary.get(key)){
+                        if (value.substring(0, 2).equals(trigger)) {
+                            try {
+                                // ON Driver's license has ',' at end of last name, fix for that
+                                mJSONObject.put(key, key.equals(IDDictionary.LAST_NAME_KEY) ?
+                                        value.substring(3, value.length() - 2) : value.substring(3));
+
+                                if (canCheckIDValidity()){
+                                    publishProgress(isIDValid());
+                                }
+
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+
+                }
+            }
+
+        }
+        Log.d("Faggot", mJSONObject.toString());
+
+        Boolean successfulDataExtract = isAllDataObtained();
+        if (successfulDataExtract) {
+            writeJSONToCachedFile();
+        }
+        return successfulDataExtract;
+    }
+
+    @Override
+    protected void onProgressUpdate(Boolean ... isValidID) {
+
+    }
+
+    // Checks whether person is 19+, and if ID is not expired. Dates are stored in form: YYYYMMDD
+    private boolean isIDValid(){
+        SimpleDateFormat scannerDateFormat = new SimpleDateFormat("yyyyMMdd", Locale.getDefault());
+
+        boolean valid;
+        try {
+            Calendar currentDate = Calendar.getInstance();
+
+            Calendar expiryDate = Calendar.getInstance();
+            expiryDate.setTime(
+                    scannerDateFormat.parse(mJSONObject.getString(IDDictionary.ID_EXPIRY_DATE_KEY)));
+
+            Calendar birthDate = Calendar.getInstance();
+            birthDate.setTime(
+                    scannerDateFormat.parse(mJSONObject.getString(IDDictionary.BIRTH_DATE_KEY)));
+
+            valid = expiryDate.after(currentDate) &&
+                    getAge(currentDate, birthDate) >= IDDictionary.ACTIVATED_DRINKING_AGE;
+        } catch (Exception e) {
+            e.printStackTrace();
+            valid = false;
+        }
+        return valid;
+    }
+
+    private int getAge(Calendar current, Calendar birth) {
+        int age = current.get(Calendar.YEAR) - birth.get(Calendar.YEAR);
+
+        if ((birth.get(Calendar.MONTH) > current.get(Calendar.MONTH))
+                || (birth.get(Calendar.MONTH) == current.get(Calendar.MONTH) &&
+                    birth.get(Calendar.DAY_OF_MONTH) > current.get(Calendar.DAY_OF_MONTH))){
+            age--;
+        }
+        return age;
+    }
+
+    private boolean isAllDataObtained(){
+        return mJSONObject.has(IDDictionary.ID_EXPIRY_DATE_KEY) && mJSONObject.has(IDDictionary.BIRTH_DATE_KEY)
+                && mJSONObject.has(IDDictionary.FIRST_NAME_KEY) && mJSONObject.has(IDDictionary.LAST_NAME_KEY)
+                    && mJSONObject.has(IDDictionary.GENDER_KEY);
+    }
+
+    private void writeJSONToCachedFile(){
+
+    }
+
+    private boolean canCheckIDValidity(){
+        return mJSONObject.has(IDDictionary.BIRTH_DATE_KEY) && mJSONObject.has(IDDictionary.ID_EXPIRY_DATE_KEY);
+    }
 }

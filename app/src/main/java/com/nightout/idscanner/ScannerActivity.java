@@ -12,6 +12,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.CompoundButton;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.nightout.idscanner.camera.CameraManager;
@@ -186,6 +187,12 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
             e.printStackTrace();
             showErrorMessage("Camera Hardware Error", "There was a problem with the camera hardware. Please re-start you're phone.");
         }
+    }
+
+    public void reportIDValidity(boolean valid) {
+        //TODO: Have some animation for when spinner fades out, and fade in red 'x' or green checkmark to indicate validity
+        mDecodeSpinner.setVisibility(View.GONE);
+        Toast.makeText(this, valid ? "Valid ID" : "Invalid ID", Toast.LENGTH_LONG).show();
     }
 
     public void reportScannerBatchResponse(boolean successful, String decodedResult) {
