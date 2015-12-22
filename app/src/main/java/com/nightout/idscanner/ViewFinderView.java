@@ -24,7 +24,6 @@ public final class ViewFinderView extends View {
     public ViewFinderView(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
-        mPaint = new Paint();
     }
 
     @SuppressWarnings("unused")
@@ -39,6 +38,7 @@ public final class ViewFinderView extends View {
             int width = canvas.getWidth();
             int height = canvas.getHeight();
 
+            mPaint = new Paint();
 
             // Draw the framing rect exterior UI shaded elements
             mPaint.setColor(Color.parseColor(VIEWFINDER_EXTERIOR_COLOR));

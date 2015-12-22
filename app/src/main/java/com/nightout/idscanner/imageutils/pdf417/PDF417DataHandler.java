@@ -130,7 +130,7 @@ public class PDF417DataHandler extends AsyncTask<String, Boolean, Boolean> {
         return mJSONObject.has(IDDictionary.BIRTH_DATE_KEY) && mJSONObject.has(IDDictionary.ID_EXPIRY_DATE_KEY);
     }
 
-    private void storeCurrentTime(Calendar currentTime) throws JSONException {
+    private void storeCurrentTime(Calendar currentTime) throws Exception {
         SimpleDateFormat dateFormat = new SimpleDateFormat(IDDictionary.NIGHTTIDE_STORING_DATE_FORMAT,
                 Locale.getDefault());
         String formattedDate = dateFormat.format(currentTime.getTime());
