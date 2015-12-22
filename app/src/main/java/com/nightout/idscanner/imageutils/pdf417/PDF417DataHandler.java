@@ -1,7 +1,6 @@
 package com.nightout.idscanner.imageutils.pdf417;
 
 import android.os.AsyncTask;
-import android.util.Log;
 
 import com.nightout.idscanner.imageutils.IDDictionary;
 
@@ -20,33 +19,39 @@ import java.util.Map;
  */
 public class PDF417DataHandler extends AsyncTask<String, Boolean, Boolean> {
     private JSONObject mJSONObject;
+    private PDF417Helper mHelper;
+
+    public PDF417DataHandler(PDF417Helper helper) {
+        mJSONObject = new JSONObject();
+        mHelper = helper;
+    }
 
     @Override
     protected Boolean doInBackground(String ... decodedResult) {
         Map<String, ArrayList<String>> dictionary =
                 new LinkedHashMap<>(IDDictionary.getBarcodeIdDictionary());
 
-        mJSONObject  = new JSONObject();
-
         String [] values = decodedResult[0].split("\\r?\\n");
-
+        boolean validityAlreadyReported = false;
         for (String value : values) {
             //Denotes that all the required attributes have been set to JSON object
             if (isAllDataObtained()) {
                 break;
             }
+            value = value.trim();
             // Assuming that all IDs being scanned have 3 letter trigger at the beginning like ON driver license
             if (value.length() > 3) {
                 for (Map.Entry<String, ArrayList<String>> entry : dictionary.entrySet()) {
                     String key = entry.getKey();
                     for (String trigger : dictionary.get(key)){
-                        if (value.substring(0, 2).equals(trigger)) {
+                        if (value.substring(0, 3).equals(trigger)) {
                             try {
                                 // ON Driver's license has ',' at end of last name, fix for that
                                 mJSONObject.put(key, key.equals(IDDictionary.LAST_NAME_KEY) ?
-                                        value.substring(3, value.length() - 2) : value.substring(3));
+                                        value.substring(3, value.length() - 1) : value.substring(3));
 
-                                if (canCheckIDValidity()){
+                                if (canCheckIDValidity() && !validityAlreadyReported){
+                                    validityAlreadyReported = true;
                                     publishProgress(isIDValid());
                                 }
 
@@ -60,8 +65,6 @@ public class PDF417DataHandler extends AsyncTask<String, Boolean, Boolean> {
             }
 
         }
-        Log.d("Faggot", mJSONObject.toString());
-
         Boolean successfulDataExtract = isAllDataObtained();
         if (successfulDataExtract) {
             writeJSONToCachedFile();
@@ -71,7 +74,7 @@ public class PDF417DataHandler extends AsyncTask<String, Boolean, Boolean> {
 
     @Override
     protected void onProgressUpdate(Boolean ... isValidID) {
-
+        mHelper.reportIDValidity(isValidID[0]);
     }
 
     // Checks whether person is 19+, and if ID is not expired. Dates are stored in form: YYYYMMDD

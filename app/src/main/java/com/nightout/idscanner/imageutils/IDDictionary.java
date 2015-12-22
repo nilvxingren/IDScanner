@@ -14,7 +14,7 @@ public class IDDictionary {
     public static final String LAST_NAME_KEY = "last_name";
     public static final String ID_EXPIRY_DATE_KEY = "id_expiry_date";
     public static final String GENDER_KEY = "gender";
-    public static final String BIRTH_DATE_KEY = "birth date";
+    public static final String BIRTH_DATE_KEY = "birth_date";
 
     // In order of what comes first ON driver's license
     public static final String[] ID_EXPIRY_TRIGGERS = {"DBA"};

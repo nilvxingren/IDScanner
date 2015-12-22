@@ -80,7 +80,7 @@ public class PDF417Helper {
                 mScannerActivity.reportScannerBatchResponse(mSuccessfullyDecoded, result);
             } else {
                 // Extract useful data, check validity of license, and cache data
-                new PDF417DataHandler().execute(result);
+                new PDF417DataHandler(this).execute(result);
             }
         }
 
