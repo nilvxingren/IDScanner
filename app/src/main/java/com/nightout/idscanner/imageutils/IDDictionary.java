@@ -28,6 +28,8 @@ public class IDDictionary {
     public static final String[] GENDER_TRIGGERS = {"DBC"};
 
     public static final String ON_DRIVERS_LICENSE_DATE_FORMAT = "yyyyMMdd";
+    // This is what is stored for values in ON drivers license when the data is not available
+    public static final String ON_DRIVERS_LICENSE_UNAVAILABLE_VALUE = "unavail";
     public static final String NIGHTTIDE_STORING_DATE_FORMAT = "yyyyMMddkkmmss";
 
     // Assume ON drinking age for now
