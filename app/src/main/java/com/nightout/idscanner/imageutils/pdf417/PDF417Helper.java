@@ -20,10 +20,11 @@ public class PDF417Helper {
 
     private boolean mScanningsCurrentlyInSession;
     private boolean mSuccessfullyDecoded;
-    private String mDecodedResponse;
 
     private ScannerActivity mScannerActivity;
     private CameraManager mCameraManager;
+
+    private static final boolean DEBUG_DECODE = false;
 
     Camera.PictureCallback mCallback = new Camera.PictureCallback() {
         @Override
@@ -74,8 +75,13 @@ public class PDF417Helper {
         mFinishedThreadCount++;
         if (successful && !mSuccessfullyDecoded) {
             mSuccessfullyDecoded = true;
-            mDecodedResponse = result;
-            mScannerActivity.reportScannerBatchResponse(mSuccessfullyDecoded, mDecodedResponse);
+            if (DEBUG_DECODE) {
+                // Shows scanned result to UI, only for testing barcode purposes
+                mScannerActivity.reportScannerBatchResponse(mSuccessfullyDecoded, result);
+            } else {
+                // Extract useful data, check validity of license, and cache data
+                new PDF417DataHandler(this).execute(result);
+            }
         }
 
         if (mFinishedThreadCount == MAX_THREAD_COUNT) {
@@ -86,10 +92,13 @@ public class PDF417Helper {
         }
     }
 
+    public synchronized void reportIDValidity(boolean valid) {
+        mScannerActivity.reportIDValidity(valid);
+    }
+
     private void cleanup(){
         mScanningsCurrentlyInSession = false;
         mSuccessfullyDecoded = false;
-        mDecodedResponse = null;
         mFinishedThreadCount = 0;
         mStartedThreadCount = 0;
     }
