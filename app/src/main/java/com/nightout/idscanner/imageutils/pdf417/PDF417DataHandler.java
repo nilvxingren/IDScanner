@@ -33,9 +33,11 @@ public class PDF417DataHandler extends AsyncTask<String, Boolean, Boolean> {
 
         String [] values = decodedResult[0].split("\\r?\\n");
         boolean validityAlreadyReported = false;
+        boolean isValid = false;
+
         for (String value : values) {
             //Denotes that all the required attributes have been set to JSON object
-            if (isAllDataObtained()) {
+            if (isAllDataObtained() || isCancelled()) {
                 break;
             }
             value = value.trim();
@@ -52,9 +54,13 @@ public class PDF417DataHandler extends AsyncTask<String, Boolean, Boolean> {
 
                                 if (canCheckIDValidity() && !validityAlreadyReported){
                                     validityAlreadyReported = true;
-                                    publishProgress(isIDValid());
+                                    isValid = isIDValid();
+                                    publishProgress(isValid);
+                                    if (!isValid) {
+                                        // drop everything if its not valid id
+                                        cancel(true);
+                                    }
                                 }
-
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
@@ -63,10 +69,9 @@ public class PDF417DataHandler extends AsyncTask<String, Boolean, Boolean> {
 
                 }
             }
-
         }
         Boolean successfulDataExtract = isAllDataObtained();
-        if (successfulDataExtract) {
+        if (successfulDataExtract && !isCancelled() && isValid) {
             writeJSONToCachedFile();
         }
         return successfulDataExtract;
@@ -77,13 +82,15 @@ public class PDF417DataHandler extends AsyncTask<String, Boolean, Boolean> {
         mHelper.reportIDValidity(isValidID[0]);
     }
 
-    // Checks whether person is 19+, and if ID is not expired. Dates are stored in form: YYYYMMDD
+    // Checks whether person is 19+, and if ID is not expired. Dates are stored in form: yyyyMMdd, also stores entrance time
     private boolean isIDValid(){
-        SimpleDateFormat scannerDateFormat = new SimpleDateFormat("yyyyMMdd", Locale.getDefault());
+        SimpleDateFormat scannerDateFormat = new SimpleDateFormat(IDDictionary.ON_DRIVERS_LICENSE_DATE_FORMAT
+                , Locale.getDefault());
 
         boolean valid;
         try {
             Calendar currentDate = Calendar.getInstance();
+            storeCurrentTime(currentDate);
 
             Calendar expiryDate = Calendar.getInstance();
             expiryDate.setTime(
@@ -125,5 +132,12 @@ public class PDF417DataHandler extends AsyncTask<String, Boolean, Boolean> {
 
     private boolean canCheckIDValidity(){
         return mJSONObject.has(IDDictionary.BIRTH_DATE_KEY) && mJSONObject.has(IDDictionary.ID_EXPIRY_DATE_KEY);
+    }
+
+    private void storeCurrentTime(Calendar currentTime) throws JSONException {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(IDDictionary.NIGHTTIDE_STORING_DATE_FORMAT,
+                Locale.getDefault());
+        String formattedDate = dateFormat.format(currentTime.getTime());
+        mJSONObject.put(IDDictionary.ENTRANCE_TIME_KEY, formattedDate);
     }
 }
