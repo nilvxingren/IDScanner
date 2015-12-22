@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -27,11 +28,20 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
     private View mDecodeSpinner;
     private ViewFinderView mViewFinder;
 
+    private FileManager mFileManager;
     private CameraManager mCameraManager;
     private PDF417Helper mBarcodeScannerHelper;
     private OCRHelper mOCRHelper;
 
     private boolean mHasSurface;
+
+    private SharedPreferences.OnSharedPreferenceChangeListener mSharedPrefChangeListener =
+            new SharedPreferences.OnSharedPreferenceChangeListener() {
+                @Override
+                public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+                    // Need to update UI for bouncer based on change in count/male count
+                }
+            };
 
     static {
         if (!OpenCVLoader.initDebug()) {
@@ -48,11 +58,10 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         mCameraManager = new CameraManager();
+        mFileManager = new FileManager(this);
+        mOCRHelper = new OCRHelper(this, mFileManager);
 
-        FileManager fileManager = new FileManager(this);
-        mOCRHelper = new OCRHelper(this, fileManager);
-
-        mBarcodeScannerHelper = new PDF417Helper(this);
+        mBarcodeScannerHelper = new PDF417Helper(this, mFileManager);
 
         mOCRHelper.setupOCRLibrary();
 
@@ -62,7 +71,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
     @Override
     protected void onResume() {
         super.onResume();
-
+        mFileManager.getSharedPrefs().registerChangeListener(mSharedPrefChangeListener);
         SurfaceHolder holder = ((SurfaceView)findViewById(R.id.surface_view)).getHolder();
         if (!mHasSurface) {
             holder.addCallback(this);
@@ -72,6 +81,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
     @Override
     protected void onPause() {
         mCameraManager.deInitCamera();
+        mFileManager.getSharedPrefs().unregisterChangeListener(mSharedPrefChangeListener);
         super.onPause();
 
     }

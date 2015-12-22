@@ -4,8 +4,11 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 
+import com.nightout.idscanner.FileManager;
 import com.nightout.idscanner.ScannerActivity;
 import com.nightout.idscanner.camera.CameraManager;
+
+import org.json.JSONObject;
 
 /**
  * Created by behnamreyhani-masoleh on 15-12-15.
@@ -23,6 +26,7 @@ public class PDF417Helper {
 
     private ScannerActivity mScannerActivity;
     private CameraManager mCameraManager;
+    private FileManager mFileManager;
 
     private static final boolean DEBUG_DECODE = false;
 
@@ -39,9 +43,10 @@ public class PDF417Helper {
         }
     };
 
-    public PDF417Helper(ScannerActivity activity) {
+    public PDF417Helper(ScannerActivity activity, FileManager fileManager) {
         mScannerActivity = activity;
         mCameraManager = mScannerActivity.getCameraManager();
+        mFileManager = fileManager;
     }
 
     public boolean currentlyScanning(){
@@ -101,5 +106,9 @@ public class PDF417Helper {
         mSuccessfullyDecoded = false;
         mFinishedThreadCount = 0;
         mStartedThreadCount = 0;
+    }
+
+    public void storeData(JSONObject object){
+        mFileManager.getSharedPrefs().storeData(object);
     }
 }

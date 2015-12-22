@@ -14,6 +14,7 @@ public class IDDictionary {
     public static final String FIRST_NAME_KEY = "first_name";
     public static final String LAST_NAME_KEY = "last_name";
     public static final String ID_EXPIRY_DATE_KEY = "id_expiry_date";
+    // For the value stored, 1 represents male, and 0 represents female
     public static final String GENDER_KEY = "gender";
     public static final String BIRTH_DATE_KEY = "birth_date";
     // Value for this stored in form represented by NIGHTTIDE_STORING_DATE_FORMAT (below)

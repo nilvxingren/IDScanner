@@ -72,7 +72,7 @@ public class PDF417DataHandler extends AsyncTask<String, Boolean, Boolean> {
         }
         Boolean successfulDataExtract = isAllDataObtained();
         if (successfulDataExtract && !isCancelled() && isValid) {
-            writeJSONToCachedFile();
+            mHelper.storeData(mJSONObject);
         }
         return successfulDataExtract;
     }
@@ -124,10 +124,6 @@ public class PDF417DataHandler extends AsyncTask<String, Boolean, Boolean> {
         return mJSONObject.has(IDDictionary.ID_EXPIRY_DATE_KEY) && mJSONObject.has(IDDictionary.BIRTH_DATE_KEY)
                 && mJSONObject.has(IDDictionary.FIRST_NAME_KEY) && mJSONObject.has(IDDictionary.LAST_NAME_KEY)
                     && mJSONObject.has(IDDictionary.GENDER_KEY);
-    }
-
-    private void writeJSONToCachedFile(){
-
     }
 
     private boolean canCheckIDValidity(){
