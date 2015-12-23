@@ -13,6 +13,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.CompoundButton;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
@@ -27,6 +28,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
     private ToggleButton mLightButton;
     private View mDecodeSpinner;
     private ViewFinderView mViewFinder;
+    private TextView mStatsView;
 
     private FileManager mFileManager;
     private CameraManager mCameraManager;
@@ -34,12 +36,17 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
     private OCRHelper mOCRHelper;
 
     private boolean mHasSurface;
+    // TODO: Make this true only for when permission is given by server once a request to start recording is made
+    private boolean mIsRecording = true;
 
     private SharedPreferences.OnSharedPreferenceChangeListener mSharedPrefChangeListener =
             new SharedPreferences.OnSharedPreferenceChangeListener() {
                 @Override
                 public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-                    // Need to update UI for bouncer based on change in count/male count
+                    // Need to update UI for bouncer based on change in count/male
+                    if (key.equals(FileManager.NightOutSharedPreferences.TOTAL_PEOPLE_COUNT_KEY)) {
+                        updateStatsView();
+                    }
                 }
             };
 
@@ -72,6 +79,11 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
     protected void onResume() {
         super.onResume();
         mFileManager.getSharedPrefs().registerChangeListener(mSharedPrefChangeListener);
+        if (mIsRecording && !mBarcodeScannerHelper.currentlyScanning()) {
+            updateStatsView();
+            showStatsView(true);
+        }
+
         SurfaceHolder holder = ((SurfaceView)findViewById(R.id.surface_view)).getHolder();
         if (!mHasSurface) {
             holder.addCallback(this);
@@ -125,7 +137,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
             if (mHasSurface && mCameraManager != null && mCameraManager.isPictureTakingReady()
                     && !mBarcodeScannerHelper.currentlyScanning()) {
                 try {
-                    mDecodeSpinner.setVisibility(View.VISIBLE);
+                    showStatsView(false);
                     mBarcodeScannerHelper.decodeBatch();
                     return true;
                 } catch (Exception e) {
@@ -172,6 +184,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
         });
 
         mDecodeSpinner = findViewById(R.id.decode_spinner);
+        mStatsView = (TextView) findViewById(R.id.stats_textview);
 
         /* Hardware volume up/down used for starting barcode decoding for now
         (findViewById(R.id.button_capture)).setOnClickListener(new View.OnClickListener() {
@@ -199,18 +212,23 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
         }
     }
 
+    private void updateStatsView() {
+        mStatsView.setText(mFileManager.getSharedPrefs().getCurrentNightStats());
+    }
+
     public void reportIDValidity(boolean valid) {
         //TODO: Have some animation for when spinner fades out, and fade in red 'x' or green checkmark to indicate validity
-        mDecodeSpinner.setVisibility(View.GONE);
+        showStatsView(true);
         Toast.makeText(this, valid ? "Valid ID" : "Invalid ID", Toast.LENGTH_LONG).show();
     }
 
     public void reportScannerBatchResponse(boolean successful, String decodedResult) {
+        // Only called in debug mode
         if (successful) {
-            mDecodeSpinner.setVisibility(View.GONE);
+            showStatsView(true);
             showAlertDialog("Decode Response:", decodedResult);
         } else if (!mCameraManager.isLightOn()){
-            mDecodeSpinner.setVisibility(View.GONE);
+            showStatsView(true);
             showAlertDialog("Inadequate Lighting",
                     "Please turn on the scanner light and try again for improved accuracy.");
         } else {
@@ -253,5 +271,11 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
 
     public CameraManager getCameraManager(){
         return mCameraManager;
+    }
+
+    // False as parameter would be to show the progress spinner
+    private void showStatsView(boolean showStatsView) {
+        (showStatsView ? mDecodeSpinner : mStatsView).setVisibility(View.GONE);
+        (showStatsView ? mStatsView : mDecodeSpinner).setVisibility(View.VISIBLE);
     }
 }

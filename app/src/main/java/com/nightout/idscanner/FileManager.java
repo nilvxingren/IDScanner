@@ -104,15 +104,15 @@ public class FileManager {
         public static final String MALE_COUNT_KEY = "male_count_key";
 
         public void registerChangeListener(SharedPreferences.OnSharedPreferenceChangeListener listener) {
-            SharedPreferences cacheData = mContext.getSharedPreferences(SCANNED_INFO_CACHE_PREF,
+            SharedPreferences nightData = mContext.getSharedPreferences(NIGHT_DATA_PREF,
                     Context.MODE_PRIVATE);
-            cacheData.registerOnSharedPreferenceChangeListener(listener);
+            nightData.registerOnSharedPreferenceChangeListener(listener);
         }
 
         public void unregisterChangeListener(SharedPreferences.OnSharedPreferenceChangeListener listener) {
-            SharedPreferences cacheData = mContext.getSharedPreferences(SCANNED_INFO_CACHE_PREF,
+            SharedPreferences nightData = mContext.getSharedPreferences(NIGHT_DATA_PREF,
                     Context.MODE_PRIVATE);
-            cacheData.unregisterOnSharedPreferenceChangeListener(listener);
+            nightData.unregisterOnSharedPreferenceChangeListener(listener);
         }
 
         public synchronized void storeData(JSONObject jsonObject) {
@@ -152,6 +152,19 @@ public class FileManager {
             if (dataInCacheCount >= CACHE_PREF_THRESHOLD) {
                 // Need to push data to server (do this in this async task??)
             }
+        }
+
+        public String getCurrentNightStats(){
+            SharedPreferences nightData = mContext.getSharedPreferences(NIGHT_DATA_PREF,
+                    Context.MODE_PRIVATE);
+            int totalCount = nightData.getInt(TOTAL_PEOPLE_COUNT_KEY, 0);
+            int maleCount = nightData.getInt(MALE_COUNT_KEY,0);
+            if (totalCount == 0) {
+                return "People Entered: 0";
+            }
+            double malePercentage = ((double)maleCount/totalCount) * 100;
+            return "People Entered: " + totalCount + "\nMale: " + malePercentage
+                    + "%, Female: " + (100d-malePercentage) + "%";
         }
     }
 
