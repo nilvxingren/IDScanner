@@ -70,10 +70,12 @@ public class PDF417Helper {
     }
 
     private void startAsyncTaskInParallel(PDF417DecodeAsyncTask task) {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
             task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        else
+        }
+        else {
             task.execute();
+        }
     }
 
     public synchronized void reportResult(boolean successful, String result) {
@@ -81,6 +83,7 @@ public class PDF417Helper {
         if (successful && !mSuccessfullyDecoded) {
             mSuccessfullyDecoded = true;
             if (DEBUG_DECODE) {
+                mScanningsCurrentlyInSession = false;
                 // Shows scanned result to UI, only for testing barcode purposes
                 mScannerActivity.reportScannerBatchResponse(mSuccessfullyDecoded, result);
             } else {
@@ -93,16 +96,17 @@ public class PDF417Helper {
             if (!mSuccessfullyDecoded) {
                 mScannerActivity.reportScannerBatchResponse(false, null);
             }
-            cleanup();
+            mScanningsCurrentlyInSession = false;
+            resetBatchState();
         }
     }
 
     public synchronized void reportIDValidity(boolean valid) {
+        mScanningsCurrentlyInSession = false;
         mScannerActivity.reportIDValidity(valid);
     }
 
-    private void cleanup(){
-        mScanningsCurrentlyInSession = false;
+    private void resetBatchState(){
         mSuccessfullyDecoded = false;
         mFinishedThreadCount = 0;
         mStartedThreadCount = 0;
