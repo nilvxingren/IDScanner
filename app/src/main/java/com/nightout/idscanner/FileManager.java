@@ -158,13 +158,13 @@ public class FileManager {
             SharedPreferences nightData = mContext.getSharedPreferences(NIGHT_DATA_PREF,
                     Context.MODE_PRIVATE);
             int totalCount = nightData.getInt(TOTAL_PEOPLE_COUNT_KEY, 0);
-            int maleCount = nightData.getInt(MALE_COUNT_KEY,0);
+            int maleCount = nightData.getInt(MALE_COUNT_KEY, 0);
             if (totalCount == 0) {
                 return "People Entered: 0";
             }
             double malePercentage = ((double)maleCount/totalCount) * 100;
-            return "People Entered: " + totalCount + "\nMale: " + malePercentage
-                    + "%, Female: " + (100d-malePercentage) + "%";
+            return "People Entered: " + totalCount + "\nMale: " + String.format("%.2f", malePercentage)
+                    + "%, Female: " + String.format("%.2f", 100d-malePercentage) + "%";
         }
     }
 
