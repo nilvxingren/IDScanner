@@ -72,6 +72,7 @@ public class PDF417DataHandler extends AsyncTask<String, Boolean, Boolean> {
         }
         Boolean successfulDataExtract = isAllDataObtained();
         if (successfulDataExtract && !isCancelled() && isValid) {
+            mJSONObject.remove(IDDictionary.ID_EXPIRY_DATE_KEY);
             mHelper.storeData(mJSONObject);
         }
         return successfulDataExtract;
@@ -123,7 +124,7 @@ public class PDF417DataHandler extends AsyncTask<String, Boolean, Boolean> {
     private boolean isAllDataObtained(){
         return mJSONObject.has(IDDictionary.ID_EXPIRY_DATE_KEY) && mJSONObject.has(IDDictionary.BIRTH_DATE_KEY)
                 && mJSONObject.has(IDDictionary.FIRST_NAME_KEY) && mJSONObject.has(IDDictionary.LAST_NAME_KEY)
-                    && mJSONObject.has(IDDictionary.GENDER_KEY);
+                    && mJSONObject.has(IDDictionary.GENDER_KEY) && mJSONObject.has(IDDictionary.ID_KEY);
     }
 
     private boolean canCheckIDValidity(){

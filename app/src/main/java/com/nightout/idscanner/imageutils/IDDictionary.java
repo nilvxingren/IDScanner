@@ -11,21 +11,24 @@ import java.util.Map;
  */
 public class IDDictionary {
     // Keys for the JSON object that is being sent to server
-    public static final String FIRST_NAME_KEY = "first_name";
-    public static final String LAST_NAME_KEY = "last_name";
+    public static final String FIRST_NAME_KEY = "FN";
+    public static final String LAST_NAME_KEY = "LN";
     public static final String ID_EXPIRY_DATE_KEY = "id_expiry_date";
     // For the value stored, 1 represents male, and 0 represents female
-    public static final String GENDER_KEY = "gender";
-    public static final String BIRTH_DATE_KEY = "birth_date";
+    public static final String GENDER_KEY = "Sex";
+    public static final String BIRTH_DATE_KEY = "BD";
     // Value for this stored in form represented by NIGHTTIDE_STORING_DATE_FORMAT (below)
-    public static final String ENTRANCE_TIME_KEY = "entrance_time";
+    public static final String ENTRANCE_TIME_KEY = "ET";
+    public static final String ID_KEY = "ID";
 
-    // In order of what comes first ON driver's license
+
+    // In order of what comes first ON driver's license, assuming we only scan ON drivers license for now
     public static final String[] ID_EXPIRY_TRIGGERS = {"DBA"};
     public static final String[] LAST_NAME_TRIGGERS = {"DCS"};
     public static final String[] FIRST_NAME_TRIGGERS = {"DCT"};
     public static final String[] BIRTH_DAY_TRIGGERS = {"DBB"};
     public static final String[] GENDER_TRIGGERS = {"DBC"};
+    public static final String[] ID_TRIGGERS = {"DAQ"};
 
     public static final String ON_DRIVERS_LICENSE_DATE_FORMAT = "yyyyMMdd";
     // This is what is stored for values in ON drivers license when the data is not available
@@ -45,6 +48,7 @@ public class IDDictionary {
         idDict.put(FIRST_NAME_KEY, getAttributeKeys(FIRST_NAME_TRIGGERS));
         idDict.put(BIRTH_DATE_KEY, getAttributeKeys(BIRTH_DAY_TRIGGERS));
         idDict.put(GENDER_KEY, getAttributeKeys(GENDER_TRIGGERS));
+        idDict.put(ID_KEY, getAttributeKeys(ID_TRIGGERS));
 
         BARCODE_ID_DICTIONARY = Collections.unmodifiableMap(idDict);
     }
