@@ -1,4 +1,4 @@
-package com.nightout.idscanner.camera;
+package io.clubhub.idscanner.camera;
 
 import android.content.Context;
 import android.graphics.Point;

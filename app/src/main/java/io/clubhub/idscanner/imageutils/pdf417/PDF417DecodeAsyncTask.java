@@ -1,17 +1,17 @@
-package com.nightout.idscanner.imageutils.pdf417;
+package io.clubhub.idscanner.imageutils.pdf417;
 
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.AsyncTask;
 
+import io.clubhub.idscanner.imageutils.ImagePreProcessor;
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.LuminanceSource;
 import com.google.zxing.RGBLuminanceSource;
 import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.pdf417.PDF417Reader;
-import com.nightout.idscanner.imageutils.ImagePreProcessor;
 
 /**
  * Created by behnamreyhani-masoleh on 15-11-02.

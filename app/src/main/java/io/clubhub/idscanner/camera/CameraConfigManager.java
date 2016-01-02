@@ -1,4 +1,4 @@
-package com.nightout.idscanner.camera;
+package io.clubhub.idscanner.camera;
 
 import android.content.Context;
 import android.graphics.Point;
@@ -7,7 +7,7 @@ import android.hardware.Camera;
 import android.view.Display;
 import android.view.WindowManager;
 
-import com.nightout.idscanner.imageutils.ImagePreProcessor;
+import io.clubhub.idscanner.imageutils.ImagePreProcessor;
 
 import java.util.ArrayList;
 import java.util.Collection;

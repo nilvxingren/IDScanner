@@ -1,4 +1,4 @@
-package com.nightout.idscanner;
+package io.clubhub.idscanner;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

@@ -1,8 +1,8 @@
-package com.nightout.idscanner.imageutils.pdf417;
+package io.clubhub.idscanner.imageutils.pdf417;
 
 import android.os.AsyncTask;
 
-import com.nightout.idscanner.imageutils.IDDictionary;
+import io.clubhub.idscanner.imageutils.IDDictionary;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -132,7 +132,7 @@ public class PDF417DataHandler extends AsyncTask<String, Boolean, Boolean> {
     }
 
     private void storeCurrentTime(Calendar currentTime) throws Exception {
-        SimpleDateFormat dateFormat = new SimpleDateFormat(IDDictionary.NIGHTTIDE_STORING_DATE_FORMAT,
+        SimpleDateFormat dateFormat = new SimpleDateFormat(IDDictionary.CLUBHUB_STORING_DATE_FORMAT,
                 Locale.getDefault());
         String formattedDate = dateFormat.format(currentTime.getTime());
         mJSONObject.put(IDDictionary.ENTRANCE_TIME_KEY, formattedDate);

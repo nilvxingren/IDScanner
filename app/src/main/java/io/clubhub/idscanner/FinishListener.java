@@ -1,4 +1,4 @@
-package com.nightout.idscanner;
+package io.clubhub.idscanner;
 
 import android.app.Activity;
 import android.content.DialogInterface;

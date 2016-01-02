@@ -1,4 +1,4 @@
-package com.nightout.idscanner;
+package io.clubhub.idscanner;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -17,9 +17,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import com.nightout.idscanner.camera.CameraManager;
-import com.nightout.idscanner.imageutils.ocr.OCRHelper;
-import com.nightout.idscanner.imageutils.pdf417.PDF417Helper;
+import io.clubhub.idscanner.imageutils.ocr.OCRHelper;
+import io.clubhub.idscanner.camera.CameraManager;
+import io.clubhub.idscanner.imageutils.pdf417.PDF417Helper;
 
 import org.opencv.android.OpenCVLoader;
 
@@ -44,7 +44,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
                 @Override
                 public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
                     // Need to update UI for bouncer based on change in count/male
-                    if (key.equals(FileManager.NightOutSharedPreferences.TOTAL_PEOPLE_COUNT_KEY)) {
+                    if (key.equals(FileManager.ClubHubSharedPreferences.TOTAL_PEOPLE_COUNT_KEY)) {
                         updateStatsView();
                     }
                 }
@@ -150,7 +150,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
     }
 
     private void initializeViews() {
-        setContentView(R.layout.activity_scanner);
+        setContentView(io.clubhub.idscanner.R.layout.activity_scanner);
         mViewFinder = (ViewFinderView) findViewById(R.id.view_finder_view);
         mViewFinder.setCameraManager(mCameraManager);
 

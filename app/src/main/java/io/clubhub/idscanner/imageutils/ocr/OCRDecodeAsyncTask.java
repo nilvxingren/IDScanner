@@ -1,14 +1,14 @@
-package com.nightout.idscanner.imageutils.ocr;
+package io.clubhub.idscanner.imageutils.ocr;
 
 import android.app.ProgressDialog;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 
+import io.clubhub.idscanner.imageutils.ImagePreProcessor;
 import com.googlecode.tesseract.android.TessBaseAPI;
 
-import com.nightout.idscanner.ScannerActivity;
-import com.nightout.idscanner.camera.CameraManager;
-import com.nightout.idscanner.imageutils.ImagePreProcessor;
+import io.clubhub.idscanner.ScannerActivity;
+import io.clubhub.idscanner.camera.CameraManager;
 
 import java.util.List;
 
