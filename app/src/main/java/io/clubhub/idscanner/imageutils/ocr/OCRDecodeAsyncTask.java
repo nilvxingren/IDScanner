@@ -4,11 +4,11 @@ import android.app.ProgressDialog;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 
-import io.clubhub.idscanner.imageutils.ImagePreProcessor;
 import com.googlecode.tesseract.android.TessBaseAPI;
 
 import io.clubhub.idscanner.ScannerActivity;
 import io.clubhub.idscanner.camera.CameraManager;
+import io.clubhub.idscanner.imageutils.ImagePreProcessor;
 
 import java.util.List;
 

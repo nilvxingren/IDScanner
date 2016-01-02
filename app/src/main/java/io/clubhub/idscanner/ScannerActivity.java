@@ -150,7 +150,7 @@ public class ScannerActivity extends Activity implements SurfaceHolder.Callback 
     }
 
     private void initializeViews() {
-        setContentView(io.clubhub.idscanner.R.layout.activity_scanner);
+        setContentView(R.layout.activity_scanner);
         mViewFinder = (ViewFinderView) findViewById(R.id.view_finder_view);
         mViewFinder.setCameraManager(mCameraManager);
 
