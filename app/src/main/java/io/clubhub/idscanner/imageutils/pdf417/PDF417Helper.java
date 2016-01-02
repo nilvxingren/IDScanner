@@ -1,12 +1,12 @@
-package com.nightout.idscanner.imageutils.pdf417;
+package io.clubhub.idscanner.imageutils.pdf417;
 import android.hardware.Camera;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 
-import com.nightout.idscanner.FileManager;
-import com.nightout.idscanner.ScannerActivity;
-import com.nightout.idscanner.camera.CameraManager;
+import io.clubhub.idscanner.FileManager;
+import io.clubhub.idscanner.ScannerActivity;
+import io.clubhub.idscanner.camera.CameraManager;
 
 import org.json.JSONObject;
 

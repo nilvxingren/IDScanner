@@ -1,4 +1,4 @@
-package com.nightout.idscanner.imageutils;
+package io.clubhub.idscanner.imageutils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,7 +17,7 @@ public class IDDictionary {
     // For the value stored, 1 represents male, and 0 represents female
     public static final String GENDER_KEY = "Sex";
     public static final String BIRTH_DATE_KEY = "BD";
-    // Value for this stored in form represented by NIGHTTIDE_STORING_DATE_FORMAT (below)
+    // Value for this stored in form represented by CLUBHUB_STORING_DATE_FORMAT (below)
     public static final String ENTRANCE_TIME_KEY = "ET";
     public static final String ID_KEY = "ID";
 
@@ -33,7 +33,7 @@ public class IDDictionary {
     public static final String ON_DRIVERS_LICENSE_DATE_FORMAT = "yyyyMMdd";
     // This is what is stored for values in ON drivers license when the data is not available
     public static final String ON_DRIVERS_LICENSE_UNAVAILABLE_VALUE = "unavail";
-    public static final String NIGHTTIDE_STORING_DATE_FORMAT = "yyyyMMddkkmmss";
+    public static final String CLUBHUB_STORING_DATE_FORMAT = "yyyyMMddkkmmss";
 
     // Assume ON drinking age for now
     public static final int ACTIVATED_DRINKING_AGE = 19;

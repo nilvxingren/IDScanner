@@ -1,4 +1,4 @@
-package com.nightout.idscanner.imageutils;
+package io.clubhub.idscanner.imageutils;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapRegionDecoder;
@@ -6,7 +6,7 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.util.Log;
 
-import com.nightout.idscanner.FileManager;
+import io.clubhub.idscanner.FileManager;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
@@ -245,7 +245,7 @@ public class ImagePreProcessor {
     /* Functions that are not being used right now but may be later for pre-processing/testing:
 
     public static void saveErrorImage(Bitmap scannedBarcode, String fileName) {
-        saveBitmapToFile(scannedBarcode, new File(getExternalAlbumStorageDir("nightout/Error/"
+        saveBitmapToFile(scannedBarcode, new File(getExternalAlbumStorageDir("clubhub/Error/"
                 + getCorrectDirectoryFromFileName(fileName)), fileName + ".png"));
     }
 
@@ -271,7 +271,7 @@ public class ImagePreProcessor {
       private static Bitmap getTestImage(boolean isForOCR) {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-        File photoPath = new File(getExternalAlbumStorageDir("nightout"), isForOCR ? "Test.png" : "PDFTest.png");
+        File photoPath = new File(getExternalAlbumStorageDir("clubhub"), isForOCR ? "Test.png" : "PDFTest.png");
         Bitmap bitmap = BitmapFactory.decodeFile(photoPath.getPath(), options);
         return bitmap;
     }

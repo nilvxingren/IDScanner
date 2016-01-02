@@ -1,11 +1,11 @@
-package com.nightout.idscanner;
+package io.clubhub.idscanner;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Environment;
 
-import com.nightout.idscanner.imageutils.IDDictionary;
+import io.clubhub.idscanner.imageutils.IDDictionary;
 
 import org.json.JSONObject;
 import org.opencv.android.Utils;
@@ -19,11 +19,11 @@ import java.io.FileOutputStream;
  */
 public class FileManager {
     private Context mContext;
-    private NightOutSharedPreferences mSharedPrefs;
+    private ClubHubSharedPreferences mSharedPrefs;
 
     public FileManager(Context context) {
         mContext = context;
-        mSharedPrefs = new NightOutSharedPreferences();
+        mSharedPrefs = new ClubHubSharedPreferences();
     }
 
     private static File getExternalAlbumStorageDir(String albumName) {
@@ -55,7 +55,7 @@ public class FileManager {
 
     //Used to save images that we're modified by image processing techniques to file; mostly for testing
     public static void savePicToExternalDirectory(Bitmap bitmap, String fileName) {
-        saveBitmapToFile(bitmap, new File(getExternalAlbumStorageDir("nightout"), fileName + ".png"));
+        saveBitmapToFile(bitmap, new File(getExternalAlbumStorageDir("clubhub"), fileName + ".png"));
     }
 
     public static void savePicToExternalDirectory(Mat mat, String fileName) {
@@ -77,11 +77,11 @@ public class FileManager {
         return temp;
     }
 
-    public NightOutSharedPreferences getSharedPrefs() {
+    public ClubHubSharedPreferences getSharedPrefs() {
         return mSharedPrefs;
     }
 
-    public class NightOutSharedPreferences {
+    public class ClubHubSharedPreferences {
         /* This shared pref is used to temporary hold CACHE_PREF_THRESHOLD scanned info before it
          gets pushed in bulk to the server once the threshold is reached.  If a network is not available
          it will go past the threshold, and will push to the server once a network connection is reached.

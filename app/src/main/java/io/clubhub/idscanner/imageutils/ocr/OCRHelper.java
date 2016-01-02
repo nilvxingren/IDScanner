@@ -1,9 +1,9 @@
-package com.nightout.idscanner.imageutils.ocr;
+package io.clubhub.idscanner.imageutils.ocr;
 
 import android.app.ProgressDialog;
 import com.googlecode.tesseract.android.TessBaseAPI;
-import com.nightout.idscanner.FileManager;
-import com.nightout.idscanner.ScannerActivity;
+import io.clubhub.idscanner.FileManager;
+import io.clubhub.idscanner.ScannerActivity;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
